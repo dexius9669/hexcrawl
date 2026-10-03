@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DaD Генератор гекскроула — Dragons at Dawn</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #12141a;
+        color: #d8dce2;
+    }
+    header { max-width: 1200px; margin: 0 auto 12px; }
+    header h1 { font-size: 22px; margin: 0 0 2px; }
+    header .sub { color: #7a8494; font-size: 13px; }
+    .tabs {
+        max-width: 1200px;
+        margin: 0 auto 16px;
+        display: flex;
+        gap: 8px;
+        border-bottom: 2px solid #2a2f3a;
+    }
+    .tab-btn {
+        padding: 10px 22px;
+        font-size: 16px;
+        background: #232833;
+        color: #aab2c0;
+        border: none;
+        border-radius: 8px 8px 0 0;
+        cursor: pointer;
+    }
+    .tab-btn.active { background: #4CAF50; color: #fff; }
+    .tab { max-width: 1200px; margin: 0 auto; }
+    .controls {
+        background: #1b1e26;
+        padding: 14px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        margin-bottom: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: center;
+    }
+    .controls label { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+    .controls input[type=number] { width: 64px; padding: 5px; font-size: 15px; }
+    .controls select { padding: 5px; font-size: 14px; }
+    select, input[type=number] {
+        background: #232833;
+        color: #d8dce2;
+        border: 1px solid #3a404d;
+        border-radius: 4px;
+    }
+    input[type=checkbox] { accent-color: #4CAF50; }
+    button.action {
+        padding: 10px 20px;
+        font-size: 15px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    button.action:hover { background-color: #45a049; }
+    .layout { display: flex; gap: 16px; align-items: flex-start; flex-wrap: nowrap; }
+    .canvas-container {
+        background: #1b1e26;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        padding: 10px;
+        overflow: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .side {
+        flex: 0 0 340px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: sticky;
+        top: 16px;
+        align-self: flex-start;
+    }
+    .panel {
+        background: #1b1e26;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        padding: 18px;
+        font-size: 14px;
+    }
+    .panel h3 { margin-top: 0; border-bottom: 2px solid #2a2f3a; padding-bottom: 8px; }
+    .info-item { margin-bottom: 10px; }
+    .info-label { font-weight: bold; color: #9aa4b4; }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; line-height: 1.4; }
+    .lg { display: inline-block; width: 30px; text-align: center; font-size: 15px; }
+    canvas { display: block; cursor: pointer; }
+    .enc-output {
+        background: #1b1e26;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        padding: 18px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .enc-step { border-bottom: 1px solid #2a2f3a; padding: 10px 0; }
+    .enc-step:last-child { border-bottom: none; }
+    .enc-label { font-weight: bold; color: #7aa2cc; margin-bottom: 4px; }
+    .enc-val .muted { color: #8892a2; }
+    .enc-note { color: #7a8494; font-size: 12px; margin-top: 12px; }
+    .step2-box {
+        background: #1b1e26;
+        border: 1px solid #3a404d;
+        border-radius: 8px;
+        padding: 16px;
+        margin: 12px 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: center;
+        font-size: 14px;
+    }
+    .step2-box p { flex-basis: 100%; margin: 0; color: #9aa4b4; }
+    .step2-box label { display: inline-flex; align-items: center; gap: 6px; }
+    .roll-layout { display: flex; gap: 16px; align-items: flex-start; flex-wrap: nowrap; }
+    .roll-result-panel { flex: 0 0 360px; position: sticky; top: 16px; align-self: flex-start; }
+    .roll-history-panel { flex: 1 1 auto; min-width: 0; }
+    .history-list { max-height: 72vh; overflow: auto; }
+    .history-entry { border-bottom: 1px solid #2a2f3a; padding: 12px 0; }
+    .history-entry:first-child { padding-top: 0; }
+    .history-entry:last-child { border-bottom: none; }
+    .history-entry h4 { margin: 0 0 6px; color: #7aa2cc; font-size: 15px; }
+    .rline { margin: 3px 0; line-height: 1.5; }
+    .rline.muted { color: #8892a2; }
+    .btn-clear { background-color: #5a6472; }
+    .btn-clear:hover { background-color: #4a5361; }
+    .tool-btn {
+        padding: 8px 14px;
+        font-size: 14px;
+        background: #232833;
+        color: #aab2c0;
+        border: 1px solid #3a404d;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .tool-btn:hover { background: #2c323e; }
+    .tool-btn.active { background: #4CAF50; color: #fff; border-color: #4CAF50; }
+    footer {
+        max-width: 1200px;
+        margin: 24px auto 0;
+        color: #6a7484;
+        font-size: 12px;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+<header>
+    <h1>Генератор гекскроула</h1>
+    <div class="sub">По материалам «Dragons at Dawn: Supplement I — Twilight» (Daniel Hugh Boggs, 2011). Масштаб гекса — 5 миль.</div>
+</header>
+
+<nav class="tabs">
+    <button class="tab-btn active" data-tab="roll">Броски по таблице</button>
+    <button class="tab-btn" data-tab="map">Генератор карты</button>
+    <button class="tab-btn" data-tab="encounter">Генератор встреч</button>
+</nav>
+
+<section id="rollTab" class="tab">
+    <div class="controls">
+        <label>Биом:
+            <select id="rollBiome">
+                <option value="1">Arid or Ocean</option>
+                <option value="2">Tropical</option>
+                <option value="3">Sub Tropical</option>
+                <option value="4" selected>Temperate</option>
+                <option value="5">Sub Arctic</option>
+                <option value="6">Arctic</option>
+            </select>
+        </label>
+        <span id="rollOceanWrap" style="display:none;">
+            <label><input type="checkbox" id="rollOcean"> Океан (вместо пустыни)</label>
+        </span>
+        <button class="action" id="rollButton">Бросить гекс</button>
+        <button class="action btn-clear" id="clearHistory">Очистить историю</button>
+        <span id="rollCounter" style="font-weight:bold;color:#e8eef8;"></span>
+    </div>
+    <div class="roll-layout">
+        <div class="panel roll-result-panel">
+            <h3>Текущий результат</h3>
+            <div id="rollResult">Нажмите «Бросить гекс», чтобы заполнить один гекс.</div>
+        </div>
+        <div class="panel roll-history-panel">
+            <h3>История</h3>
+            <div class="history-list" id="rollHistoryList">История пуста.</div>
+        </div>
+    </div>
+</section>
+
+<section id="mapTab" class="tab" style="display:none;">
+    <div class="controls">
+        <label>Биом:
+            <select id="biomeSelect">
+                <option value="1">Arid or Ocean</option>
+                <option value="2">Tropical</option>
+                <option value="3">Sub Tropical</option>
+                <option value="4" selected>Temperate</option>
+                <option value="5">Sub Arctic</option>
+                <option value="6">Arctic</option>
+            </select>
+        </label>
+        <span id="oceanWrap" style="display:none;">
+            <label><input type="checkbox" id="oceanToggle"> Океан (вместо пустыни)</label>
+        </span>
+        <label>Ширина: <input type="number" id="mapWidth" min="10" max="50" value="15"></label>
+        <label>Высота: <input type="number" id="mapHeight" min="10" max="50" value="10"></label>
+        <button class="action" onclick="initMap()">Генерировать карту</button>
+        <span id="biomeDisplay" style="font-weight:bold;color:#e8eef8;"></span>
+    </div>
+    <div class="controls">
+        <label>Инструменты:</label>
+        <button class="tool-btn" id="toolRiver">Река</button>
+        <button class="tool-btn" id="toolRoadMain">Дорога (осн.)</button>
+        <button class="tool-btn" id="toolRoadMinor">Дорога (втор.)</button>
+        <button class="tool-btn" id="toolErase">Стереть</button>
+        <button class="tool-btn btn-clear" id="toolClear">Очистить реки/дороги</button>
+        <button class="action" id="exportPng">Экспорт PNG</button>
+        <button class="action" id="exportMd">Экспорт MD</button>
+    </div>
+    <div class="layout">
+        <div class="canvas-container">
+            <canvas id="hexCanvas"></canvas>
+        </div>
+        <div class="side">
+            <div class="panel">
+                <h3>Информация о гексе</h3>
+                <div id="hexDetails">Нажмите на любой гекс, чтобы увидеть его содержимое.</div>
+            </div>
+            <div class="panel">
+                <h3>Условные обозначения</h3>
+                <div class="legend-item"><span class="lg" style="color:#c9a06a;">▲</span> Холмы (25–500 фт)</div>
+                <div class="legend-item"><span class="lg" style="color:#b07a3a;">▲</span> Горы (500–3000 фт)</div>
+                <div class="legend-item"><span class="lg" style="color:#8a5a26;">▲▲</span> Высокие горы (3000–5000 фт)</div>
+                <div class="legend-item"><span class="lg" style="color:#6a4526;">▲▲▲</span> Великие пики (5000+ фт)</div>
+                <div class="legend-item"><span class="lg" style="color:#3fa34d;">●</span> Леса</div>
+                <div class="legend-item"><span class="lg" style="color:#3fa34d;">●</span><span class="lg" style="color:#b07a3a;">▲</span> Возвышенность и леса</div>
+                <div class="legend-item"><span class="lg" style="color:#5aa0a0;">≈</span> Топкое болото</div>
+                <div class="legend-item"><span class="lg" style="color:#4aa3ff;">◉</span> Оазис / колодец (остров)</div>
+                <div class="legend-item"><span class="lg" style="color:#b07a3a;">∨</span> Глубокий каньон</div>
+                <div class="legend-item"><span class="lg">🏰</span> Замок</div>
+                <div class="legend-item"><span class="lg">🏯</span> Твердыня</div>
+                <div class="legend-item"><span class="lg">🧱</span> Стена</div>
+                <div class="legend-item"><span class="lg">🏙️</span> Город</div>
+                <div class="legend-item"><span class="lg">🏡</span> Деревня</div>
+                <div class="legend-item"><span class="lg">🛖</span> Хутора</div>
+                <div class="legend-item"><span class="lg">🌾</span> Фермы</div>
+                <div class="legend-item"><span class="lg" style="color:#4aa3ff;">━</span> Река</div>
+                <div class="legend-item"><span class="lg" style="color:#8b2f2f;">━</span> Дорога (основная)</div>
+                <div class="legend-item"><span class="lg" style="color:#000000;">╌</span> Дорога (второстепенная)</div>
+                <div class="legend-item" style="margin-top:8px;color:#8892a2;line-height:1.5;">Твердыня (Keep) — короткая башня или укрепление, где размещаются городская милиция, арсенал и тюрьма. Замок (Castle) — замок со свитой.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="encounterTab" class="tab" style="display:none;">
+    <div class="controls">
+        <label>Террейн:
+            <select id="encTerrain">
+                <option>Open Land</option>
+                <option>Forest</option>
+                <option>Lakes and Rivers</option>
+                <option>Swamps</option>
+                <option>Mountains</option>
+                <option>Deserts</option>
+                <option>Ocean</option>
+                <option>Cities</option>
+            </select>
+        </label>
+        <label>Режим:
+            <select id="encMode">
+                <option value="travel">В пути</option>
+                <option value="rest">На привале</option>
+            </select>
+        </label>
+        <span id="encFreqWrap">
+            <label>Частота (в пути):
+                <select id="encFreq">
+                    <option value="temp">Temperate / Tropical / Sub Tropical — 1–3 на гекс</option>
+                    <option value="arid">Arid / Sub Arctic / Ocean / Flying — каждый 6-й гекс</option>
+                    <option value="arctic">Arctic — 1 из 10</option>
+                </select>
+            </label>
+        </span>
+        <label><input type="checkbox" id="encRoad"> Путь по дороге</label>
+        <label>Число PC: <input type="number" id="encPC" min="1" max="999" value="4"></label>
+        <button class="action" id="encButton">Бросить встречу (шаг 1)</button>
+    </div>
+
+    <div class="step2-box" id="encStep2" style="display:none;">
+        <p><b>Шаг 2.</b> Существо определено. Укажите из его описания:</p>
+        <label>% в логове: <input type="number" id="encPctLair" min="0" max="100"></label>
+        <label>Численность: <input type="number" id="encNum" min="1" max="9999"></label>
+        <button class="action" id="encContinue">Продолжить (шаг 2)</button>
+    </div>
+
+    <div class="enc-output" id="encOutput">
+        Выберите террейн и режим, затем нажмите «Бросить встречу (шаг 1)».
+    </div>
+    <div class="enc-note">
+        Шаг 1: частота встречи → тип существа (d8 × террейн) → конкретное существо (таблицы).
+        Шаг 2 (рефери вводит % в логове и численность из описания существа): бросок % в логове → если логово
+        найдено, определяются его тип и все конкретные размеры (комнаты, башни, этажи, проходы, уровни),
+        иначе логово не определяется → присутствующие (40–60%) → группы вне логова → обнаружение/уклонение
+        (число PC × число NPC) → сюрприз и дистанция → пошлина замка (если логово — замок).
+    </div>
+</section>
+
+<footer>
+    Unofficial unlicensed product designed for use with Dragons at Dawn and provided at no charge to any user.
+</footer>
+
+<script>
+/* ================= MAP GENERATOR ================= */
+
+const canvas = document.getElementById('hexCanvas');
+const ctx = canvas.getContext('2d');
+const HEX = 34;
+let hexes = [];
+const baseCanvas = document.createElement('canvas');
+const DRAW_STYLES = {
+    river: { color: '#4aa3ff', width: 3, dash: [] },
+    roadMain: { color: '#8b2f2f', width: 5, dash: [] },
+    roadMinor: { color: '#000000', width: 2, dash: [6, 4] }
+};
+let drawTool = null;
+let mapFeatures = [];
+let drawing = null;
+
+function fmtNum(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+
+function fmtMapHex(col, row) {
+    return String(col + 1).padStart(2, '0') + String(row + 1).padStart(2, '0');
+}
+
+const BIOMES = ["Arid or Ocean", "Tropical", "Sub Tropical", "Temperate", "Sub Arctic", "Arctic"];
+
+function roll(n) { return Math.floor(Math.random() * n) + 1; }
+function rollSum(d, n) { let s = 0; for (let i = 0; i < d; i++) s += roll(n); return s; }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function createHexPath(x, y, size) {
+    const path = new Path2D();
+    for (let i = 0; i < 6; i++) {
+        const a = Math.PI / 180 * (60 * i);
+        const px = x + size * Math.cos(a);
+        const py = y + size * Math.sin(a);
+        if (i === 0) path.moveTo(px, py);
+        else path.lineTo(px, py);
+    }
+    path.closePath();
+    return path;
+}
+
+const ELEVATION_COLORS = { 1: '#c9a06a', 2: '#b07a3a', 3: '#8a5a26', 4: '#6a4526' };
+
+function genTerrain(biome, ocean, log) {
+    const t = roll(10);
+    if (log) log.push({ d: 10, v: t, k: 'terrain' });
+    const r = { name: '', color: '#3a4048', kind: 'open', isWooded: false, isElevated: false, isSwamp: false, isOpen: true, water: '', elevation: '', elevTier: 0, icon: '', iconColor: '', icon2: '', icon2Color: '', iconStroke: false, icon2Stroke: false };
+
+    if (biome === 1) {
+        if (t <= 2) { r.name = 'Холмы'; r.color = '#8a6a48'; r.kind = 'elevated'; r.isElevated = true; r.isOpen = false; }
+        else if (t <= 6) { r.name = 'Холмы и каньоны'; r.color = '#7d5f3f'; r.kind = 'elevated'; r.isElevated = true; r.isOpen = false; }
+        else if (t <= 8) { r.name = 'Открытая местность'; r.color = '#9a8a5a'; r.kind = 'open'; }
+        else { r.name = 'Глубокий каньон'; r.color = '#5a3a24'; r.kind = 'open'; r.isOpen = false; }
+        const w = roll(10); if (log) log.push({ d: 10, v: w, k: 'water' });
+        r.water = ocean ? (w === 1 ? 'Остров' : 'Открытая вода') : (w === 1 ? 'Колодец или оазис' : 'Нет источника воды');
+    } else if (biome === 6) {
+        if (t <= 2) { r.name = 'Возвышенность'; r.color = '#5a5f68'; r.kind = 'elevated'; r.isElevated = true; r.isOpen = false; }
+        else if (t <= 6) { r.name = 'Возвышенность и озёра/ледники'; r.color = '#3d5a68'; r.kind = 'elevated'; r.isElevated = true; r.isOpen = false; }
+        else if (t === 7) { r.name = 'Открытая местность'; r.color = '#3a4048'; r.kind = 'open'; }
+        else if (t === 8) { r.name = 'Открытая местность с озёрами'; r.color = '#2f4a58'; r.kind = 'open'; }
+        else { r.name = 'Топкое болото'; r.color = '#3d4a52'; r.kind = 'swamp'; r.isSwamp = true; r.isOpen = false; }
+    } else {
+        if (t <= 2) { r.name = 'Леса'; r.color = '#2f6b33'; r.kind = 'wooded'; r.isWooded = true; r.isOpen = false; }
+        else if (t <= 4) { r.name = 'Возвышенность'; r.color = '#5a4a3a'; r.kind = 'elevated'; r.isElevated = true; r.isOpen = false; }
+        else if (t <= 6) { r.name = 'Возвышенность и леса'; r.color = '#43562e'; r.kind = 'elevatedWooded'; r.isElevated = true; r.isWooded = true; r.isOpen = false; }
+        else if (t <= 9) { r.name = 'Открытая местность (мало деревьев/холмов)'; r.color = '#4f6324'; r.kind = 'open'; }
+        else { r.name = 'Топкое болото'; r.color = '#24413f'; r.kind = 'swamp'; r.isSwamp = true; r.isOpen = false; }
+    }
+
+    if (r.isElevated && biome !== 1) {
+        const e = roll(12);
+        if (log) log.push({ d: 12, v: e, k: 'elevation' });
+        if (e <= 5) { r.elevation = 'Холмы (25–500 футов)'; r.elevTier = 1; }
+        else if (e <= 8) { r.elevation = 'Горы (500–3000 футов)'; r.elevTier = 2; }
+        else if (e <= 10) { r.elevation = 'Высокие горы (3000–5000 футов)'; r.elevTier = 3; }
+        else { r.elevation = 'Великие пики (5000+ футов)'; r.elevTier = 4; }
+    }
+
+    if (r.isElevated) r.color = ELEVATION_COLORS[r.elevTier || 1];
+
+    assignGlyphs(r);
+
+    if (ocean && r.water !== 'Остров') {
+        r.color = '#1b5e9e';
+        r.icon = ''; r.iconColor = ''; r.icon2 = ''; r.icon2Color = ''; r.iconStroke = false; r.icon2Stroke = false;
+    }
+
+    return r;
+}
+
+function assignGlyphs(r) {
+    r.icon = ''; r.iconColor = ''; r.icon2 = ''; r.icon2Color = ''; r.iconStroke = false; r.icon2Stroke = false;
+    if (r.isElevated) {
+        const tier = r.elevTier || 1;
+        if (tier === 1) { r.icon = '▲'; r.iconColor = '#c9a06a'; }
+        else if (tier === 2) { r.icon = '▲'; r.iconColor = '#b07a3a'; }
+        else if (tier === 3) { r.icon = '▲▲'; r.iconColor = '#8a5a26'; }
+        else { r.icon = '▲▲▲'; r.iconColor = '#6a4526'; }
+        r.iconStroke = true;
+    }
+    if (r.isWooded) {
+        if (r.icon) { r.icon2 = r.icon; r.icon2Color = r.iconColor; r.icon2Stroke = r.iconStroke; }
+        r.icon = '●'; r.iconColor = '#3fa34d'; r.iconStroke = 'outline';
+    }
+    if (r.isSwamp) { r.icon = '≈'; r.iconColor = '#5aa0a0'; r.icon2 = ''; r.icon2Color = ''; r.iconStroke = false; r.icon2Stroke = false; }
+    if (r.water === 'Колодец или оазис' || r.water === 'Остров') { r.icon = '◉'; r.iconColor = '#4aa3ff'; r.icon2 = ''; r.icon2Color = ''; r.iconStroke = false; r.icon2Stroke = false; }
+    if (r.name === 'Глубокий каньон') { r.icon = '∨'; r.iconColor = '#b07a3a'; r.icon2 = ''; r.icon2Color = ''; r.iconStroke = false; r.icon2Stroke = false; }
+}
+
+function isPopulated(biome, kind, log) {
+    if (biome === 6) return false;
+    if (biome === 1 || biome === 5) { const v = roll(20); if (log) log.push({ d: 20, v: v, k: 'population' }); return v === 1; }
+    if (kind === 'wooded') { const v = roll(10); if (log) log.push({ d: 10, v: v, k: 'population' }); return v <= 3; }
+    if (kind === 'elevated') { const v = roll(10); if (log) log.push({ d: 10, v: v, k: 'population' }); return v <= 2; }
+    if (kind === 'elevatedWooded') { const v = roll(10); if (log) log.push({ d: 10, v: v, k: 'population' }); return v <= 1; }
+    if (kind === 'swamp') { const v = roll(20); if (log) log.push({ d: 20, v: v, k: 'population' }); return v === 1; }
+    if (kind === 'open') { const v = roll(10); if (log) log.push({ d: 10, v: v, k: 'population' }); return v <= 6; }
+    return false;
+}
+
+const NAME_PRE = ['Fal', 'Kel', 'Thorn', 'Black', 'Grey', 'Ash', 'Oak', 'Red', 'Stone', 'Iron', 'Briar', 'Dun', 'Cold', 'Silver', 'Wolf', 'Raven', 'Elm', 'Hawk', 'Cinder', 'Frost', 'High', 'North', 'South', 'East', 'West', 'Dark', 'Bright', 'Moor', 'Wind', 'Star', 'Sun', 'Moon', 'Rose', 'Hart', 'Bear', 'Boar', 'Wyrm', 'Deep', 'Green', 'Gold', 'Barrow', 'Kettle', 'Yarrow', 'Grim', 'King', 'Rook', 'Riv', 'Sol', 'Hal', 'Mar', 'Car', 'Bel', 'Ald', 'Eld'];
+const NAME_MID = ['en', 'er', 'es', 'on', 'or', 'an', 'in', 'el', 'ar', 'om', ''];
+const NAME_SUF = ['worth', 'moor', 'bridge', 'hold', 'burg', 'bury', 'ford', 'field', 'gate', 'ham', 'stead', 'ton', 'well', 'wick', 'crest', 'fall', 'mere', 'shaw', 'port', 'hall', 'cliff', 'rock', 'dale', 'den', 'shire', 'wood', 'haven', 'wall', 'watch', 'keep', 'crag', 'glen', 'knoll', 'mead', 'point', 'rest', 'rise', 'shade', 'vale', 'water', 'brook', 'stone', 'guard', 'march', 'mound', 'thorpe', 'stow', 'chester'];
+
+function genName() {
+    const pre = NAME_PRE[roll(NAME_PRE.length) - 1];
+    const mid = NAME_MID[roll(NAME_MID.length) - 1];
+    const suf = NAME_SUF[roll(NAME_SUF.length) - 1];
+    const n = pre + mid + suf;
+    return n.charAt(0).toUpperCase() + n.slice(1);
+}
+
+function subRoll(d, n, mult, log, label) {
+    const v = rollSum(d, n) * (mult || 1);
+    if (log) log.push({ k: 'sub', d: d, n: n, mult: mult || 1, v: v, label: label });
+    return v;
+}
+
+function plural(n, forms) {
+    const m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return forms[0];
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return forms[1];
+    return forms[2];
+}
+
+function fortIcon(base, fort) {
+    if (fort === 'castle') return '🏰';
+    if (fort === 'keep') return '🏯';
+    if (fort === 'wall') return '🧱';
+    return base;
+}
+
+function generateSettlement(log) {
+    const r = roll(6);
+    if (log) log.push({ d: 6, v: r, k: 'settlement' });
+    switch (r) {
+        case 1: {
+            const population = 10000 + 1000 * (roll(11) - 1);
+            const k = roll(10); if (log) log.push({ d: 10, v: k, k: 'keep' });
+            const keep = k <= 6 ? '1' : (k === 7 ? 'нет' : '2');
+            const c = roll(6); if (log) log.push({ d: 6, v: c, k: 'castles' });
+            let castleTxt = 'нет замков';
+            if (c <= 2) { castleTxt = 'замок «' + genName() + '» со свитой'; }
+            else if (c === 3) { castleTxt = '2 замка: «' + genName() + '» и «' + genName() + '»'; }
+            const m = roll(6); if (log) log.push({ d: 6, v: m, k: 'mix' });
+            let mix;
+            if (m <= 3) mix = 'равная смесь ' + subRoll(4, 10, 1, log, 'хутора и деревни') + ' хуторов и деревень';
+            else if (m <= 5) { const n = subRoll(4, 10, 1, log, 'хутора'); mix = n + ' ' + plural(n, ['хутор', 'хутора', 'хуторов']) + ' и разрозненные фермы'; }
+            else { const n = subRoll(2, 4, 10, log, 'фермы'); mix = n + ' ' + plural(n, ['разрозненная ферма', 'разрозненные фермы', 'разрозненных ферм']); }
+            const fort = (c <= 2 || c === 3) ? 'castle' : (k !== 7 ? 'keep' : 'none');
+            const name = genName();
+            return { icon: fortIcon('🏙️', fort), fort: fort, pop: 'Огороженный город «' + name + '» (' + fmtNum(population) + ' чел.)', detail: 'Твердыня (Keep): ' + keep + '. Замки: ' + castleTxt + '. Окружение: ' + mix + '.', name: name, castleNames: [] };
+        }
+        case 2: {
+            const population = 1000 + 1000 * (roll(10) - 1);
+            const d = roll(12); if (log) log.push({ d: 12, v: d, k: 'def' });
+            const def = d <= 4 ? 'Твердыня (Keep)' : (d <= 10 ? 'Стена' : 'отсутствует');
+            const h4 = roll(4); if (log) log.push({ d: 4, v: h4, k: 'hamlets' });
+            const nh = h4 <= 2 ? subRoll(4, 10, 1, log, 'хутора') : 0;
+            const c4 = roll(4); if (log) log.push({ d: 4, v: c4, k: 'castle' });
+            const castleTxt = c4 === 1 ? 'Замок «' + genName() + '» со свитой' : '';
+            const parts = ['Оборона: ' + def];
+            if (nh) parts.push(nh + ' ' + plural(nh, ['хутор', 'хутора', 'хуторов']));
+            if (castleTxt) parts.push(castleTxt);
+            const fort = c4 === 1 ? 'castle' : (d <= 4 ? 'keep' : (d <= 10 ? 'wall' : 'none'));
+            const name = genName();
+            return { icon: fortIcon('🏘️', fort), fort: fort, pop: 'Огороженный город «' + name + '» (' + fmtNum(population) + ' чел.)', detail: parts.join('. ') + '.', name: name, castleNames: [] };
+        }
+        case 3: {
+            const n = subRoll(4, 10, 1, log, 'открытые хутора');
+            const c = roll(6); if (log) log.push({ d: 6, v: c, k: 'castle' });
+            let castleTxt = '';
+            if (c <= 3) castleTxt = 'Замок «' + genName() + '» со свитой.';
+            const fort = c <= 3 ? 'castle' : 'none';
+            return { icon: fortIcon('🛖', fort), fort: fort, pop: n + ' ' + plural(n, ['открытый хутор', 'открытых хутора', 'открытых хуторов']) + ' (по 10–100 чел.)', detail: castleTxt, name: null, castleNames: [] };
+        }
+        case 4:
+        case 5: {
+            const n = subRoll(2, 5, 1, log, 'деревни');
+            const d = roll(12); if (log) log.push({ d: 12, v: d, k: 'def' });
+            const def = d <= 4 ? 'Твердыня (Keep)' : (d <= 8 ? 'Стена' : (d <= 10 ? 'Стена и Твердыня (Keep)' : 'отсутствует'));
+            const c = roll(6); if (log) log.push({ d: 6, v: c, k: 'castle' });
+            const castleTxt = c <= 2 ? 'Замок «' + genName() + '» со свитой' : '';
+            const parts = ['Оборона: ' + def];
+            if (castleTxt) parts.push(castleTxt);
+            const fort = c <= 2 ? 'castle' : ((d <= 4 || (d >= 9 && d <= 10)) ? 'keep' : (d <= 8 ? 'wall' : 'none'));
+            return { icon: fortIcon('🏡', fort), fort: fort, pop: n + ' ' + plural(n, ['деревня', 'деревни', 'деревень']) + ' (по 100–1000 чел.)', detail: parts.join('. ') + '.', name: null, castleNames: [] };
+        }
+        default: {
+            const n = subRoll(1, 6, 10, log, 'фермы');
+            const b = roll(6); if (log) log.push({ d: 6, v: b, k: 'blockhouse' });
+            let block = '';
+            if (b <= 2) { const bl = roll(3); block = 'Есть ' + bl + ' ' + plural(bl, ['запертый блокгауз', 'запертых блокгауза', 'запертых блокгаузов']) + ' с припасами.'; }
+            return { icon: '🌾', fort: 'none', pop: n + ' ' + plural(n, ['разрозненная изолированная ферма', 'разрозненные изолированные фермы', 'разрозненных изолированных ферм']) + ' (по 1–20 чел.)', detail: block, name: null, castleNames: [] };
+        }
+    }
+}
+
+function centerOf(col, row) {
+    const hexH = Math.sqrt(3) * HEX;
+    return { x: HEX * 1.5 * col + HEX, y: HEX * Math.sqrt(3) * (row + 0.5 * (col & 1)) + hexH / 2 };
+}
+
+function drawGlyph(c, ch, color, mode, x, y) {
+    if (mode === 'outline') {
+        c.fillStyle = color; c.fillText(ch, x, y);
+        c.strokeStyle = '#1f242c'; c.lineWidth = 1; c.strokeText(ch, x, y);
+    } else if (mode) {
+        c.strokeStyle = '#1f242c'; c.lineWidth = 1; c.strokeText(ch, x, y);
+    } else {
+        c.fillStyle = color; c.fillText(ch, x, y);
+    }
+}
+
+function drawTerrainLayer(c, scale) {
+    c.clearRect(0, 0, c.canvas.width, c.canvas.height);
+    c.save();
+    c.scale(scale, scale);
+    hexes.forEach(function (h) {
+        c.fillStyle = h.terrain.color;
+        c.fill(h.path);
+        c.strokeStyle = '#3a3f48';
+        c.lineWidth = 1;
+        c.stroke(h.path);
+
+        const t = h.terrain;
+        if (t.icon) {
+            c.font = "14px 'Segoe UI', Arial, sans-serif";
+            c.textAlign = 'center';
+            c.textBaseline = 'middle';
+            if (t.icon2) {
+                drawGlyph(c, t.icon2, t.icon2Color, t.icon2Stroke, h.x, h.y + 8);
+                drawGlyph(c, t.icon, t.iconColor, t.iconStroke, h.x, h.y - 8);
+            } else {
+                drawGlyph(c, t.icon, t.iconColor, t.iconStroke, h.x, h.y);
+            }
+        }
+        if (h.settlement) {
+            c.font = "20px 'Segoe UI', Arial, sans-serif";
+            c.textAlign = 'center';
+            c.textBaseline = 'middle';
+            c.fillText(h.settlement.icon, h.x, h.y + (t.icon ? 15 : 0));
+        }
+        c.font = "9px 'Segoe UI', Arial, sans-serif";
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillStyle = '#8a93a3';
+        c.fillText(h.num, h.x, h.y + HEX * 0.62);
+    });
+    c.restore();
+}
+
+function drawFeaturesLayer(c, scale, features) {
+    c.save();
+    c.scale(scale, scale);
+    features.forEach(function (f) {
+        const s = DRAW_STYLES[f.type];
+        if (!s) return;
+        c.strokeStyle = s.color;
+        c.lineWidth = s.width;
+        c.setLineDash(s.dash);
+        c.lineJoin = 'round';
+        c.lineCap = 'round';
+        c.beginPath();
+        f.points.forEach(function (p, i) {
+            if (i === 0) c.moveTo(p[0], p[1]);
+            else c.lineTo(p[0], p[1]);
+        });
+        c.stroke();
+    });
+    c.setLineDash([]);
+    c.restore();
+}
+
+function renderScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(baseCanvas, 0, 0);
+    drawFeaturesLayer(ctx, 1, mapFeatures);
+    if (drawing && drawing.points.length) drawFeaturesLayer(ctx, 1, [drawing]);
+}
+
+function initMap() {
+    const mapWidth = document.getElementById('mapWidth');
+    const mapHeight = document.getElementById('mapHeight');
+    let width = clamp(parseInt(mapWidth.value) || 15, 10, 50);
+    let height = clamp(parseInt(mapHeight.value) || 10, 10, 50);
+    mapWidth.value = width;
+    mapHeight.value = height;
+
+    const biome = parseInt(document.getElementById('biomeSelect').value);
+    const ocean = biome === 1 && document.getElementById('oceanToggle').checked;
+    const biomeName = biome === 1 ? (ocean ? 'Ocean' : 'Arid') : BIOMES[biome - 1];
+    document.getElementById('biomeDisplay').innerText = 'Биом: ' + biomeName;
+
+    const hexH = Math.sqrt(3) * HEX;
+    canvas.width = (width * 1.5 + 0.5) * HEX;
+    canvas.height = height * hexH + hexH / 2;
+    baseCanvas.width = canvas.width;
+    baseCanvas.height = canvas.height;
+
+    hexes = [];
+    mapFeatures = [];
+    drawing = null;
+
+    for (let col = 0; col < width; col++) {
+        for (let row = 0; row < height; row++) {
+            const terrain = genTerrain(biome, ocean);
+            const c = centerOf(col, row);
+
+            let settlement = null;
+            const isIsland = ocean && terrain.water === 'Остров';
+            if ((ocean ? isIsland : true) && isPopulated(biome, terrain.kind)) {
+                settlement = generateSettlement();
+            }
+
+            const path = createHexPath(c.x, c.y, HEX);
+            hexes.push({ col: col, row: row, num: fmtMapHex(col, row), x: c.x, y: c.y, path: path, terrain: terrain, settlement: settlement });
+        }
+    }
+
+    drawTerrainLayer(baseCanvas.getContext('2d'), 1);
+    renderScreen();
+
+    document.getElementById('hexDetails').innerHTML = 'Карта сгенерирована. Кликните по гексу для информации.';
+}
+
+canvas.addEventListener('click', function (e) {
+    if (drawTool) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    for (let i = 0; i < hexes.length; i++) {
+        if (ctx.isPointInPath(hexes[i].path, mx, my)) {
+            displayHexInfo(hexes[i]);
+            break;
+        }
+    }
+});
+
+function canvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return [e.clientX - rect.left, e.clientY - rect.top];
+}
+
+function distToSeg(p, a, b) {
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    if (dx === 0 && dy === 0) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+    const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)));
+    return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
+}
+
+function eraseFeatureAt(p) {
+    let best = -1, bestD = 8;
+    mapFeatures.forEach(function (f, i) {
+        for (let j = 0; j < f.points.length - 1; j++) {
+            const d = distToSeg(p, f.points[j], f.points[j + 1]);
+            if (d < bestD) { bestD = d; best = i; }
+        }
+    });
+    if (best >= 0) { mapFeatures.splice(best, 1); renderScreen(); }
+}
+
+canvas.addEventListener('mousedown', function (e) {
+    if (!drawTool) return;
+    const p = canvasPos(e);
+    if (drawTool === 'erase') { eraseFeatureAt(p); return; }
+    drawing = { type: drawTool, points: [p] };
+});
+
+window.addEventListener('mousemove', function (e) {
+    if (!drawing) return;
+    const p = canvasPos(e);
+    const last = drawing.points[drawing.points.length - 1];
+    if (Math.abs(p[0] - last[0]) > 2 || Math.abs(p[1] - last[1]) > 2) {
+        drawing.points.push(p);
+        renderScreen();
+    }
+});
+
+window.addEventListener('mouseup', function () {
+    if (!drawing) return;
+    if (drawing.points.length >= 2) mapFeatures.push(drawing);
+    drawing = null;
+    renderScreen();
+});
+
+function displayHexInfo(h) {
+    const t = h.terrain;
+    let html = '<div class="info-item"><span class="info-label">Гекс:</span> ' + h.num + ' (колонка ' + (h.col + 1) + ', ряд ' + (h.row + 1) + ')</div>';
+    html += '<div class="info-item"><span class="info-label">Ландшафт:</span> ' + t.name + '</div>';
+    if (t.elevation) html += '<div class="info-item"><span class="info-label">Возвышенность:</span> ' + t.elevation + '</div>';
+    if (t.water) html += '<div class="info-item"><span class="info-label">Вода:</span> ' + t.water + '</div>';
+    if (h.settlement) html += '<div class="info-item"><span class="info-label">Население:</span> ' + h.settlement.icon + ' ' + h.settlement.pop + '<br>' + h.settlement.detail + '</div>';
+    else html += '<div class="info-item"><span class="info-label">Население:</span> Не заселено</div>';
+    html += '<div style="margin-top:16px"><span class="info-label">Цвет:</span> <span style="display:inline-block;width:24px;height:24px;background:' + t.color + ';border:1px solid #3a3f48;border-radius:4px;vertical-align:middle;"></span></div>';
+    document.getElementById('hexDetails').innerHTML = html;
+}
+
+/* ================= DRAW TOOLS / EXPORT ================= */
+
+const DRAW_TOOLS = [['toolRiver', 'river'], ['toolRoadMain', 'roadMain'], ['toolRoadMinor', 'roadMinor'], ['toolErase', 'erase']];
+DRAW_TOOLS.forEach(function (t) {
+    document.getElementById(t[0]).addEventListener('click', function () {
+        drawTool = drawTool === t[1] ? null : t[1];
+        DRAW_TOOLS.forEach(function (x) { document.getElementById(x[0]).classList.toggle('active', drawTool === x[1]); });
+        canvas.style.cursor = drawTool ? 'crosshair' : 'pointer';
+    });
+});
+document.getElementById('toolClear').addEventListener('click', function () {
+    mapFeatures = [];
+    renderScreen();
+});
+
+document.getElementById('exportPng').addEventListener('click', function () {
+    const scale = 3;
+    const out = document.createElement('canvas');
+    out.width = canvas.width * scale;
+    out.height = canvas.height * scale;
+    drawTerrainLayer(out.getContext('2d'), scale);
+    drawFeaturesLayer(out.getContext('2d'), scale, mapFeatures);
+    const a = document.createElement('a');
+    a.download = 'hexmap.png';
+    a.href = out.toDataURL('image/png');
+    a.click();
+});
+
+function buildMd() {
+    const biome = parseInt(document.getElementById('biomeSelect').value);
+    const ocean = biome === 1 && document.getElementById('oceanToggle').checked;
+    const biomeName = biome === 1 ? (ocean ? 'Ocean' : 'Arid') : BIOMES[biome - 1];
+    const lines = ['# Описание карты — биом: ' + biomeName, ''];
+    const settled = [];
+    const features = [];
+    hexes.forEach(function (h) {
+        const t = h.terrain;
+        if (h.settlement) settled.push(h);
+        if (t.name === 'Глубокий каньон') features.push({ h: h, txt: 'Глубокий каньон' });
+        if (t.water === 'Колодец или оазис') features.push({ h: h, txt: 'Колодец или оазис' });
+        else if (t.water === 'Остров') features.push({ h: h, txt: 'Остров' });
+    });
+    lines.push('## Поселения');
+    if (settled.length === 0) lines.push('— нет —');
+    settled.forEach(function (h) {
+        const s = h.settlement;
+        lines.push('- **Гекс ' + h.num + '** — ' + s.icon + ' ' + s.pop + (s.detail ? '. ' + s.detail : ''));
+    });
+    lines.push('');
+    lines.push('## Особенности');
+    if (features.length === 0) lines.push('— нет —');
+    features.forEach(function (f) {
+        lines.push('- **Гекс ' + f.h.num + '** — ' + f.txt + '.');
+    });
+    lines.push('');
+    lines.push('*Unofficial unlicensed product designed for use with Dragons at Dawn.*');
+    return lines.join('\n');
+}
+
+document.getElementById('exportMd').addEventListener('click', function () {
+    const blob = new Blob([buildMd()], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.download = 'hexmap.md';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    URL.revokeObjectURL(a.href);
+});
+
+/* ================= ENCOUNTER GENERATOR ================= */
+
+const CREATURE_TYPE = {
+    'Open Land': ['Humanoid', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Normal', 'Human', 'Normal', 'Dragon'],
+    'Forest': ['Human', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Lycanthropes', 'Human', 'Normal', 'Dragon'],
+    'Lakes and Rivers': ['Human', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Normal', 'Fantastic', 'Normal', 'Dragon'],
+    'Swamps': ['Human', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Normal', 'Undead', 'Undead', 'Dragon'],
+    'Mountains': ['Human', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Normal', 'Humanoid', 'Dragon', 'Dragon'],
+    'Deserts': ['Human', 'Fantastic', 'Humanoid', 'Human', 'Normal', 'Dragon', '-', '-'],
+    'Ocean': ['Human', 'Fantastic', 'Humanoid', 'Undead', 'Normal', '-', '-', '-'],
+    'Cities': ['Human', 'Undead', 'Undead', 'Human', '-', '-', '-', '-']
+};
+
+const CREATURE_TABLES = {
+    'Humanoid': { die: 10, entries: ['Dwarves', 'Elves', 'Giants', 'Goblins', 'Halflings', 'Hobgoblins', 'Kobolds', 'Ogres', 'Orcs, Giant', 'Orcs, tribal'] },
+    'Fantastic': { die: 12, entries: ['Basilisks', 'Centaurs', 'Cockatrices', 'Dragons', 'Elemental, Air', 'Elemental, Earth', 'Elemental, Fire', 'Elemental, Water', 'Treant', 'Troll', 'True Troll', 'Unicorn'] },
+    'Humans': { die: 8, entries: ['Bandits', 'Bandits', 'Rebels', 'Retainers', 'Retainers', 'Retainers', 'Angry Mob', 'Nomads'] },
+    'Lycanthropes': { die: 6, entries: ['Werewolves', 'Werewolves', 'Werebears', 'Werebears', 'Werelions/tigers', 'Werelions/tigers'] },
+    'Normal': { die: 8, entries: ['Giant Eagle', 'Giant Wolves', 'Roc', 'Tarn, Cargo', 'Tarn, Racing', 'Tarn, War', 'Thoat', 'Wargs'] },
+    'Undead': { die: 6, entries: ['Ghouls', 'Sarcophagus Skeleton', 'Wights', 'Wraiths', 'Vampire', 'Zombies'] }
+};
+
+const LAIR_TYPES = {
+    1: { name: 'Industrial/Commercial Buildings', roll: function () { return 'строений: ' + rollSum(2, 6) + ', комнат в каждом: ' + roll(6) + ', проходов: ' + roll(12) + ', подземных уровней: ' + roll(2); } },
+    2: { name: 'Temple', roll: function () { return 'комнат: ' + rollSum(2, 12) + ', этажей: ' + roll(3) + ', подземных проходов: ' + roll(6) + ', подземных уровней: ' + roll(4); } },
+    3: { name: 'Cave', roll: function () { return 'проходов: ' + rollSum(3, 10) + ', уровней: ' + roll(4); } },
+    4: { name: 'Castle (ранее неизвестный)', roll: function () { return 'комнат: ' + rollSum(4, 6) + ', башен: ' + roll(6) + ', этажей: ' + roll(6) + ', подземных проходов: ' + rollSum(2, 6) + ', подземных уровней: ' + roll(4); } },
+    5: { name: 'Farm', roll: function () { return 'построек: ' + roll(6) + ', комнат в каждой: ' + roll(6) + ', этажей: ' + roll(4) + ', подземных проходов: ' + (roll(4) - 1) + ', уровней: 1'; } },
+    6: { name: "Magic-user's Tower", roll: function () { return 'комнат: ' + rollSum(3, 6) + ', этажей: ' + (roll(6) + 1) + ', подземных проходов: ' + rollSum(3, 10) + ', подземных уровней: ' + (roll(4) - 1); } }
+};
+
+const RESTING = {
+    'Open Land': [6],
+    'Forest': [5, 6],
+    'Lakes and Rivers': [5, 6],
+    'Swamps': [4, 5, 6],
+    'Mountains': [4, 5, 6],
+    'Deserts': [5, 6],
+    'Ocean': [6],
+    'Cities': [6]
+};
+
+const DISCOVERY = {
+    '1-3': { '30+': [50, 50], '16-30': [30, 70], '1-15': [10, 90] },
+    '4-9': { '30+': [70, 30], '16-30': [50, 50], '1-15': [30, 70] },
+    '10-24': { '30+': [90, 10], '16-30': [70, 30], '1-15': [50, 50] },
+    '25+': { '30+': [95, 5], '16-30': [85, 15], '1-15': [75, 25] }
+};
+
+let encState = null;
+
+function pcRange(n) { return n <= 3 ? '1-3' : (n <= 9 ? '4-9' : (n <= 24 ? '10-24' : '25+')); }
+function npcRange(n) { return n >= 30 ? '30+' : (n >= 16 ? '16-30' : '1-15'); }
+
+function terrainMod(t) {
+    if (t === 'Forest') { const r = 10 + roll(16) - 1; return { disc: -r, evad: r, note: 'Лес: −10…−25% к обнаружению, +10…+25% к уклонению (+10% уклонения даже при сюрпризе).' }; }
+    if (t === 'Mountains') return { disc: -20, evad: 20, note: 'Горы: −20% к обнаружению, +20% к уклонению.' };
+    if (t === 'Swamps' || t === 'Cities') return { disc: -5, evad: 5, note: 'Болота/города: −5% к обнаружению, +5% к уклонению.' };
+    return { disc: 0, evad: 0, note: '' };
+}
+
+function splitGroups(total) {
+    if (total <= 0) return [0];
+    const groups = [total];
+    for (let i = 0; i < 50; i++) {
+        if (roll(6) <= 4) break;
+        groups.sort(function (a, b) { return b - a; });
+        const g = groups[0];
+        if (g < 2) break;
+        const a = Math.floor(g / 2);
+        const b = g - a;
+        groups.splice(0, 1, a, b);
+    }
+    groups.sort(function (a, b) { return b - a; });
+    return groups;
+}
+
+function genLairDetails(isUndead) {
+    const r = roll(8);
+    let name, detail;
+    if (r <= 6) {
+        name = LAIR_TYPES[r].name;
+        detail = LAIR_TYPES[r].roll();
+    } else if (r === 7 && isUndead) {
+        name = 'Burial Ground';
+        detail = 'могил: ' + roll(100) + ', проходов: ' + roll(12) + ', уровней: ' + roll(3);
+    } else {
+        const c = roll(6);
+        const count = c <= 2 ? 2 : (c <= 4 ? 3 : 4);
+        const pool = [1, 2, 3, 4, 5, 6].sort(function () { return Math.random() - 0.5; }).slice(0, count);
+        name = 'Комбинация (' + count + ')';
+        detail = 'Сочетание ' + count + ' типов (d6 = ' + c + '):<br>' + pool.map(function (i) { return '<b>' + LAIR_TYPES[i].name + '</b>: ' + LAIR_TYPES[i].roll(); }).join('<br>');
+    }
+    return { name: name, html: '<b>' + name + '</b><br><span class="muted">' + detail + '</span>' };
+}
+
+function setText(arr) {
+    if (arr.length === 1) return String(arr[0]);
+    const a = arr.slice().sort(function (x, y) { return x - y; });
+    return a[0] + '–' + a[a.length - 1];
+}
+
+function surpriseStep() {
+    const p = roll(6);
+    let html = 'PC: d6 = <b>' + p + '</b> → ' + (p <= 2 ? (p === 1 ? 'застигнуты на 1 раунд' : 'застигнуты на 2 раунда') : 'не застигнуты');
+    if (p > 2) {
+        const n = roll(6);
+        html += '<br>NPC: d6 = <b>' + n + '</b> → ' + (n <= 2 ? (n === 1 ? 'застигнуты на 1 раунд' : 'застигнуты на 2 раунда') : 'не застигнуты');
+    }
+    const sd = rollSum(2, 4) * 10;
+    const sds = roll(4) * 10;
+    html += '<br>Дистанция обнаружения: <b>' + sd + '</b> ярдов (2d4×10, без сюрприза) / <b>' + sds + '</b> ярдов (1d4×10, при сюрпризе).';
+    return html;
+}
+
+function encAdd(label, html) {
+    return '<div class="enc-step"><div class="enc-label">' + label + '</div><div class="enc-val">' + html + '</div></div>';
+}
+
+function startEncounter() {
+    const terrain = document.getElementById('encTerrain').value;
+    const mode = document.getElementById('encMode').value;
+    const freq = document.getElementById('encFreq').value;
+    const road = document.getElementById('encRoad').checked;
+    const pc = parseInt(document.getElementById('encPC').value) || 0;
+
+    const out = document.getElementById('encOutput');
+    const steps = [];
+
+    let ok = true;
+    if (mode === 'travel') {
+        if (freq === 'temp') { const n = roll(3); steps.push(encAdd('Частота встречи (в пути)', '1–3 встречи на 5-мильный гекс → d3 = <b>' + n + '</b> встреч(и).')); }
+        else if (freq === 'arid') { const r = roll(6); ok = r === 6; steps.push(encAdd('Частота встречи (в пути)', 'Каждый 6-й гекс (1 из 6). Бросок d6 = <b>' + r + '</b> → ' + (ok ? '<b>встреча</b>' : 'нет встречи') + '.')); }
+        else { const r = roll(10); ok = r === 1; steps.push(encAdd('Частота встречи (в пути)', '1 из 10. Бросок d10 = <b>' + r + '</b> → ' + (ok ? '<b>встреча</b>' : 'нет встречи') + '.')); }
+    } else {
+        const r = roll(6);
+        const set = RESTING[terrain];
+        ok = set.indexOf(r) >= 0;
+        steps.push(encAdd('Частота встречи (на привале)', terrain + ': встреча при ' + setText(set) + '. Бросок d6 = <b>' + r + '</b> → ' + (ok ? '<b>встреча</b>' : 'нет встречи') + '.'));
+    }
+
+    if (!ok) {
+        steps.push(encAdd('Итог', 'Встреча не происходит. Нажмите «Бросить встречу (шаг 1)» ещё раз.'));
+        out.innerHTML = steps.join('');
+        document.getElementById('encStep2').style.display = 'none';
+        encState = null;
+        return;
+    }
+
+    let type = '-', dr = 0, attempts = 0;
+    do {
+        dr = roll(8);
+        type = CREATURE_TYPE[terrain][dr - 1];
+        attempts++;
+        if (type === '-' && attempts > 20) type = 'Humanoid';
+    } while (type === '-');
+    steps.push(encAdd('Тип существа', 'd8 = <b>' + dr + '</b> → <b>' + type + '</b>' + (attempts > 1 ? ' (переброс «—» ×' + (attempts - 1) + ')' : '') + '.'));
+
+    if (type === 'Dragon') {
+        steps.push(encAdd('Существо', '<b>Dragon</b> — отдельной таблицы драконов в книге нет; конкретный вид определяет рефери.'));
+    } else {
+        const tableKey = type === 'Human' ? 'Humans' : type;
+        const table = CREATURE_TABLES[tableKey];
+        const cr = roll(table.die);
+        steps.push(encAdd('Существо', type + ': d' + table.die + ' = <b>' + cr + '</b> → <b>' + table.entries[cr - 1] + '</b>.'));
+    }
+
+    encState = { terrain: terrain, mode: mode, road: road, pc: pc, type: type, steps1: steps.join('') };
+    out.innerHTML = encState.steps1;
+    document.getElementById('encStep2').style.display = '';
+}
+
+function continueEncounter() {
+    if (!encState) return;
+    const pctRaw = document.getElementById('encPctLair').value;
+    const numRaw = document.getElementById('encNum').value;
+    if (pctRaw === '' || numRaw === '') {
+        alert('Введите % в логове и численность (из описания существа).');
+        return;
+    }
+    const pctLair = parseInt(pctRaw);
+    const numAppear = parseInt(numRaw);
+    const out = document.getElementById('encOutput');
+    const steps = [];
+
+    const d100 = roll(100);
+    const found = d100 <= pctLair;
+    steps.push(encAdd('% в логове', pctLair + '% → d100 = <b>' + d100 + '</b> → ' + (found ? '<b>логово найдено</b>' : 'логово не найдено') + '.'));
+    steps.push(encAdd('Численность', 'Задано рефери: <b>' + numAppear + '</b>.'));
+
+    let lairName = '';
+    if (found) {
+        const lair = genLairDetails(encState.type === 'Undead');
+        steps.push(encAdd('Логово', lair.html));
+        lairName = lair.name;
+    } else {
+        steps.push(encAdd('Логово', 'Логово не найдено — тип логова не определяется.'));
+    }
+
+    const pr = roll(6);
+    const pct = pr <= 4 ? 40 : (pr === 5 ? 50 : 60);
+    const inLair = Math.round(numAppear * pct / 100);
+    const outside = numAppear - inLair;
+    steps.push(encAdd('Присутствие', 'd6 = <b>' + pr + '</b> → ' + pct + '% присутствуют. В логове: <b>' + inLair + '</b>, вне логова: <b>' + outside + '</b>.'));
+
+    const groups = splitGroups(outside);
+    steps.push(encAdd('Группы вне логова', groups.length === 1 ? '1 группа (' + groups[0] + ').' : groups.length + ' группы: ' + groups.join(', ') + '.'));
+
+    const pc = encState.pc;
+    if (pc >= 1) {
+        const pcR = pcRange(pc);
+        const mod = terrainMod(encState.terrain);
+        let discMod = mod.disc, evadMod = mod.evad;
+        if (encState.road) { discMod += 20; evadMod -= 20; }
+        let rows = '';
+        groups.forEach(function (g, i) {
+            const npcR = npcRange(g);
+            const base = DISCOVERY[pcR][npcR];
+            const disc = clamp(base[0] + discMod, 5, 100);
+            const evad = clamp(base[1] + evadMod, 0, 100);
+            const droll = roll(100);
+            const eroll = roll(100);
+            rows += '<div>Группа ' + (i + 1) + ' (' + g + ' шт., NPC ' + npcR + '): обнаружение ' + disc + '% → d100=' + droll + ' (' + (droll <= disc ? 'обнаружены' : 'нет') + '); уклонение ' + evad + '% → d100=' + eroll + ' (' + (eroll <= evad ? 'уклонились' : 'замечены') + ').</div>';
+        });
+        const modNote = mod.note + (encState.road ? ' Путь по дороге: +20% к обнаружению, −20% к уклонению.' : '');
+        steps.push(encAdd('Обнаружение / уклонение', '<div>PC: <b>' + pc + '</b> (диапазон ' + pcR + '). ' + modNote + '</div>' + rows));
+    } else {
+        steps.push(encAdd('Обнаружение / уклонение', 'Укажите число PC для расчёта.'));
+    }
+
+    steps.push(encAdd('Сюрприз', surpriseStep()));
+
+    if (found && lairName.indexOf('Castle') >= 0) {
+        const t = roll(6) * 100;
+        steps.push(encAdd('Пошлина замка', 'Fighters/Clerics: <b>' + t + '</b> gp за группу (1d6×100). Magic-users: эквивалент золотом + магические предметы.'));
+    }
+
+    out.innerHTML = encState.steps1 + steps.join('');
+}
+
+/* ================= HEX-FILL ROLL LOG ================= */
+
+const HISTORY_KEY = 'dadHexHistory';
+const COUNTER_KEY = 'dadHexCounter';
+
+function fmtHex(n) { return 'Гекс ' + ('0000' + n).slice(-4); }
+
+function rollHexFull(biome, ocean) {
+    const log = [];
+    const terrain = genTerrain(biome, ocean, log);
+    const isIsland = ocean && terrain.water === 'Остров';
+    let populated = false;
+    let settlement = null;
+    if (ocean ? isIsland : true) {
+        populated = isPopulated(biome, terrain.kind, log);
+        if (populated) settlement = generateSettlement(log);
+    }
+    const biomeName = biome === 1 ? (ocean ? 'Ocean' : 'Arid') : BIOMES[biome - 1];
+    return { biome: biome, ocean: ocean, biomeName: biomeName, terrain: terrain, populated: populated, settlement: settlement, log: log };
+}
+
+function rollLineHtml(log, terrain, populated, settlement) {
+    const lines = [];
+    const t = log.find(function (e) { return e.k === 'terrain'; });
+    if (t) lines.push('<div class="rline">Рельеф: <b>1d10 = ' + t.v + '</b> → ' + terrain.name + '</div>');
+    const e = log.find(function (x) { return x.k === 'elevation'; });
+    if (e) lines.push('<div class="rline">Возвышенность: <b>1d12 = ' + e.v + '</b> → ' + terrain.elevation + '</div>');
+    const w = log.find(function (x) { return x.k === 'water'; });
+    if (w) lines.push('<div class="rline">Вода: <b>1d10 = ' + w.v + '</b> → ' + terrain.water + '</div>');
+    const p = log.find(function (x) { return x.k === 'population'; });
+    if (p) lines.push('<div class="rline">Населённость: <b>1d' + p.d + ' = ' + p.v + '</b> → ' + (populated ? 'заселён' : 'не заселён') + '</div>');
+    if (settlement) {
+        const s = log.find(function (x) { return x.k === 'settlement'; });
+        lines.push('<div class="rline">Поселение: <b>1d6 = ' + (s ? s.v : '?') + '</b> → ' + settlement.icon + ' ' + settlement.pop + '</div>');
+        if (settlement.detail) lines.push('<div class="rline muted">' + settlement.detail + '</div>');
+        log.filter(function (x) { return x.k === 'sub'; }).forEach(function (x) {
+            lines.push('<div class="rline muted">' + x.label + ': <b>' + x.d + 'd' + x.n + (x.mult > 1 ? '×' + x.mult : '') + ' = ' + x.v + '</b></div>');
+        });
+    }
+    return lines.join('');
+}
+
+function makeEntryHtml(n, res) {
+    return '<div class="history-entry"><h4>' + fmtHex(n) + ' — ' + res.biomeName + (res.ocean ? ' (океан)' : '') + '</h4>' + rollLineHtml(res.log, res.terrain, res.populated, res.settlement) + '</div>';
+}
+
+function loadHistory() {
+    let hist = [];
+    try { hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch (e) { hist = []; }
+    let counter = 0;
+    try { counter = parseInt(localStorage.getItem(COUNTER_KEY) || '0', 10) || 0; } catch (e) { counter = 0; }
+    return { hist: hist, counter: counter };
+}
+
+function renderHistory() {
+    const state = loadHistory();
+    document.getElementById('rollCounter').innerText = 'Гексов: ' + state.counter;
+    document.getElementById('rollHistoryList').innerHTML = state.hist.length ? state.hist.join('') : 'История пуста.';
+}
+
+function rollOneHex() {
+    const biome = parseInt(document.getElementById('rollBiome').value);
+    const ocean = biome === 1 && document.getElementById('rollOcean').checked;
+    const res = rollHexFull(biome, ocean);
+
+    const state = loadHistory();
+    state.counter += 1;
+    const entryHtml = makeEntryHtml(state.counter, res);
+    state.hist.unshift(entryHtml);
+
+    try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(state.hist));
+        localStorage.setItem(COUNTER_KEY, String(state.counter));
+    } catch (e) { }
+
+    document.getElementById('rollCounter').innerText = 'Гексов: ' + state.counter;
+    document.getElementById('rollResult').innerHTML = '<h4 style="margin:0 0 8px;color:#7aa2cc;">' + fmtHex(state.counter) + ' — ' + res.biomeName + (res.ocean ? ' (океан)' : '') + '</h4>' + rollLineHtml(res.log, res.terrain, res.populated, res.settlement);
+    document.getElementById('rollHistoryList').innerHTML = state.hist.join('');
+}
+
+function clearHistory() {
+    try { localStorage.removeItem(HISTORY_KEY); localStorage.removeItem(COUNTER_KEY); } catch (e) { }
+    document.getElementById('rollCounter').innerText = 'Гексов: 0';
+    document.getElementById('rollResult').innerHTML = 'Нажмите «Бросить гекс», чтобы заполнить один гекс.';
+    document.getElementById('rollHistoryList').innerHTML = 'История пуста.';
+}
+
+/* ================= INIT ================= */
+
+function syncOcean() {
+    document.getElementById('oceanWrap').style.display = document.getElementById('biomeSelect').value === '1' ? '' : 'none';
+}
+document.getElementById('biomeSelect').addEventListener('change', syncOcean);
+syncOcean();
+
+function syncRollOcean() {
+    document.getElementById('rollOceanWrap').style.display = document.getElementById('rollBiome').value === '1' ? '' : 'none';
+}
+document.getElementById('rollBiome').addEventListener('change', syncRollOcean);
+syncRollOcean();
+
+function syncEncMode() {
+    document.getElementById('encFreqWrap').style.display = document.getElementById('encMode').value === 'travel' ? '' : 'none';
+}
+document.getElementById('encMode').addEventListener('change', syncEncMode);
+syncEncMode();
+
+document.getElementById('encButton').addEventListener('click', startEncounter);
+document.getElementById('encContinue').addEventListener('click', continueEncounter);
+
+document.getElementById('rollButton').addEventListener('click', rollOneHex);
+document.getElementById('clearHistory').addEventListener('click', clearHistory);
+
+document.querySelectorAll('.tab-btn').forEach(function (b) {
+    b.addEventListener('click', function () {
+        document.querySelectorAll('.tab-btn').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        document.querySelectorAll('.tab').forEach(function (t) { t.style.display = t.id === b.dataset.tab + 'Tab' ? '' : 'none'; });
+    });
+});
+
+renderHistory();
+initMap();
+</script>
+</body>
+</html>
