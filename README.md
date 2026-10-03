@@ -15,6 +15,3 @@
 
 Unofficial unlicensed product designed for use with Dragons at Dawn. Not affiliated with
 Southerwood Publishing. Все правила генератора выводятся из исходного текста книги.
-
-Исходный OCR-текст правил (`DaD.md`) в репозиторий не включён — он остаётся локальным
-источником истины.
