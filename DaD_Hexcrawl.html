@@ -160,13 +160,14 @@
 <body>
 <header>
     <h1>Генератор гекскроула</h1>
-    <div class="sub">По материалам «Dragons at Dawn: Supplement I — Twilight» (Daniel Hugh Boggs, 2011). Масштаб гекса — 5 миль.</div>
+    <div class="sub">По материалам «Dragons at Dawn: Supplement I — Twilight» (2011) и «Champions of ZED: Zero Edition Dungeoneering» (Daniel Hugh Boggs, 2015). Масштаб гекса — 5 миль. Базовые таблицы — по CoZ.</div>
 </header>
 
 <nav class="tabs">
     <button class="tab-btn active" data-tab="roll">Броски по таблице</button>
     <button class="tab-btn" data-tab="map">Генератор карты</button>
     <button class="tab-btn" data-tab="encounter">Генератор встреч</button>
+    <button class="tab-btn" data-tab="travel">Путешествие</button>
 </nav>
 
 <section id="rollTab" class="tab">
@@ -184,6 +185,13 @@
         <span id="rollOceanWrap" style="display:none;">
             <label><input type="checkbox" id="rollOcean"> Океан (вместо пустыни)</label>
         </span>
+        <label>Уровень заселения:
+            <select id="rollSettleDensity">
+                <option value="2">Дикость (d2)</option>
+                <option value="4">Фронтир (d4)</option>
+                <option value="6" selected>Цивилизация (d6)</option>
+            </select>
+        </label>
         <button class="action" id="rollButton">Бросить гекс</button>
         <button class="action btn-clear" id="clearHistory">Очистить историю</button>
         <span id="rollCounter" style="font-weight:bold;color:#e8eef8;"></span>
@@ -215,6 +223,13 @@
         <span id="oceanWrap" style="display:none;">
             <label><input type="checkbox" id="oceanToggle"> Океан (вместо пустыни)</label>
         </span>
+        <label>Уровень заселения:
+            <select id="mapSettleDensity">
+                <option value="2">Дикость (d2)</option>
+                <option value="4">Фронтир (d4)</option>
+                <option value="6" selected>Цивилизация (d6)</option>
+            </select>
+        </label>
         <label>Ширина: <input type="number" id="mapWidth" min="10" max="50" value="15"></label>
         <label>Высота: <input type="number" id="mapHeight" min="10" max="50" value="10"></label>
         <button class="action" onclick="initMap()">Генерировать карту</button>
@@ -260,7 +275,7 @@
                 <div class="legend-item"><span class="lg" style="color:#4aa3ff;">━</span> Река</div>
                 <div class="legend-item"><span class="lg" style="color:#8b2f2f;">━</span> Дорога (основная)</div>
                 <div class="legend-item"><span class="lg" style="color:#000000;">╌</span> Дорога (второстепенная)</div>
-                <div class="legend-item" style="margin-top:8px;color:#8892a2;line-height:1.5;">Твердыня (Keep) — короткая башня или укрепление, где размещаются городская милиция, арсенал и тюрьма. Замок (Castle) — замок со свитой.</div>
+                <div class="legend-item" style="margin-top:8px;color:#8892a2;line-height:1.5;">Твердыня (Keep) — короткая башня или укрепление, где размещаются городская милиция, арсенал и тюрьма. Замок (Castle) — замок со свитой.<br>Дороги по CoZ (стр. 14) идут от поселений на 500+ человек (и от торгово-промышленных мест); реки имеют исток и устье.</div>
             </div>
         </div>
     </div>
@@ -296,12 +311,14 @@
             </label>
         </span>
         <label><input type="checkbox" id="encRoad"> Путь по дороге</label>
+        <label><input type="checkbox" id="encWaterLair"> Логово A — водное (A: Water)</label>
+        <label><input type="checkbox" id="encIndividual" checked> Личная мелочь у существ</label>
         <label>Число PC: <input type="number" id="encPC" min="1" max="999" value="4"></label>
         <button class="action" id="encButton">Бросить встречу (шаг 1)</button>
     </div>
 
     <div class="step2-box" id="encStep2" style="display:none;">
-        <p><b>Шаг 2.</b> Существо определено. Укажите из его описания:</p>
+        <p><b>Шаг 2.</b> Значения подставлены из таблицы CoZ (Appendix I); можно переопределить вручную. Для существ без данных в книге (например, людей) введите значения сами.</p>
         <label>% в логове: <input type="number" id="encPctLair" min="0" max="100"></label>
         <label>Численность: <input type="number" id="encNum" min="1" max="9999"></label>
         <button class="action" id="encContinue">Продолжить (шаг 2)</button>
@@ -311,16 +328,51 @@
         Выберите террейн и режим, затем нажмите «Бросить встречу (шаг 1)».
     </div>
     <div class="enc-note">
-        Шаг 1: частота встречи → тип существа (d8 × террейн) → конкретное существо (таблицы).
-        Шаг 2 (рефери вводит % в логове и численность из описания существа): бросок % в логове → если логово
-        найдено, определяются его тип и все конкретные размеры (комнаты, башни, этажи, проходы, уровни),
+        Шаг 1: частота встречи → тип существа (d8 × террейн, CoZ стр. 11) → конкретное существо (таблицы) →
+        данные существа из Appendix I (AC, HD, % в логове, тип сокровища, некомбатанты).
+        Шаг 2: % в логове и численность подставлены автоматически (численность — бросок из диапазона Number Appearing),
+        рефери может изменить → бросок % в логове → если логово найдено, определяются его тип и размеры,
         иначе логово не определяется → присутствующие (40–60%) → группы вне логова → обнаружение/уклонение
         (число PC × число NPC) → сюрприз и дистанция → пошлина замка (если логово — замок).
+        Террейны Mountains/Deserts/Ocean/Cities в CoZ не заданы — это пример по DaD, рефери может изменить.
+        Сокровище логова (CoZ, стр. 144–145) генерируется <b>только если логово найдено</b>: монеты, камни, ювелирка/арт,
+        призовые предметы — категорией (детализация позже). Личная мелочь у существ — по стр. 144.
+    </div>
+</section>
+
+<section id="travelTab" class="tab" style="display:none;">
+    <div class="panel" style="margin-bottom:16px;">
+        <h3>Случайное направление (d6)</h3>
+        <p style="color:#8892a2;margin-top:0;">CoZ, стр. 67: 1 — N, 2 — NE, 3 — SE, 4 — S, 5 — SW, 6 — NW. Применяется для размещения логова в гексе, рассеивания групп от логова и направления погони.</p>
+        <div class="controls" style="box-shadow:none;padding:0;margin-bottom:10px;">
+            <button class="action" id="dirButton">Бросить направление</button>
+            <button class="tool-btn" id="lairPlaceButton">Разместить логово в гексе</button>
+        </div>
+        <div id="dirResult" class="enc-output">Нажмите кнопку, чтобы бросить направление.</div>
+    </div>
+
+    <div class="panel">
+        <h3>Заблудиться / Getting Lost</h3>
+        <div class="controls" style="box-shadow:none;padding:0;margin-bottom:10px;">
+            <label>Террейн:
+                <select id="lostTerrain">
+                    <option value="clear">Clear (Открытая местность)</option>
+                    <option value="woods">Woods (Леса)</option>
+                    <option value="river">River (Река)</option>
+                    <option value="swamp">Swamp/Jungle (Болото/джунгли)</option>
+                    <option value="mountains">Mountains (Горы)</option>
+                    <option value="desert">Desert (Пустыня)</option>
+                </select>
+            </label>
+            <label><input type="checkbox" id="lostIds"> Есть ориентир/карта/проводник (нет броска)</label>
+            <button class="action" id="lostButton">Проверить (d6)</button>
+        </div>
+        <div id="lostResult" class="enc-output">CoZ, стр. 66–67: бросок на потерю ориентации — 2 раза в день, при привале и при остановке на 1 ход и дольше. При потере — Direction Check (таблица направления).</div>
     </div>
 </section>
 
 <footer>
-    Unofficial unlicensed product designed for use with Dragons at Dawn and provided at no charge to any user.
+    Unofficial unlicensed product designed for use with Dragons at Dawn and Champions of ZED and provided at no charge to any user.
 </footer>
 
 <script>
@@ -351,6 +403,17 @@ const BIOMES = ["Arid or Ocean", "Tropical", "Sub Tropical", "Temperate", "Sub A
 function roll(n) { return Math.floor(Math.random() * n) + 1; }
 function rollSum(d, n) { let s = 0; for (let i = 0; i < d; i++) s += roll(n); return s; }
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+// Уровень заселения (CoZ, стр. 9): дикость — d2, фронтир — d4, цивилизация — d6
+function settleDieFor(which) {
+    const el = document.getElementById(which === 'roll' ? 'rollSettleDensity' : 'mapSettleDensity');
+    return el ? parseInt(el.value) : 6;
+}
+function defaultDensityForBiome(biome) {
+    if (biome === 1 || biome === 6) return 2;   // пустыня/тундра — дикость
+    if (biome === 5) return 4;                  // субарктика — фронтир
+    return 6;                                   // цивилизованные области
+}
 
 function createHexPath(x, y, size) {
     const path = new Path2D();
@@ -433,15 +496,19 @@ function assignGlyphs(r) {
     if (r.name === 'Глубокий каньон') { r.icon = '∨'; r.iconColor = '#b07a3a'; r.icon2 = ''; r.icon2Color = ''; r.iconStroke = false; r.icon2Stroke = false; }
 }
 
-function isPopulated(biome, kind, log) {
-    if (biome === 6) return false;
-    if (biome === 1 || biome === 5) { const v = roll(20); if (log) log.push({ d: 20, v: v, k: 'population' }); return v === 1; }
-    if (kind === 'wooded') { const v = roll(10); if (log) log.push({ d: 10, v: v, k: 'population' }); return v <= 3; }
-    if (kind === 'elevated') { const v = roll(10); if (log) log.push({ d: 10, v: v, k: 'population' }); return v <= 2; }
-    if (kind === 'elevatedWooded') { const v = roll(10); if (log) log.push({ d: 10, v: v, k: 'population' }); return v <= 1; }
-    if (kind === 'swamp') { const v = roll(20); if (log) log.push({ d: 20, v: v, k: 'population' }); return v === 1; }
-    if (kind === 'open') { const v = roll(10); if (log) log.push({ d: 10, v: v, k: 'population' }); return v <= 6; }
-    return false;
+function isPopulated(biome, terrain, log) {
+    const kind = terrain.kind;
+    if (biome === 6) return false; // Arctic: правила населения в книге нет (CoZ, стр. 9)
+    if (biome === 1 || biome === 5) { const v = roll(20); if (log) log.push({ d: 20, v: v, k: 'population' }); return v === 1; } // Arid/Subarctic 1/20
+    if (kind === 'swamp') { const v = roll(20); if (log) log.push({ d: 20, v: v, k: 'population' }); return v === 1; } // Swamp 1/20
+    let chance;
+    if (kind === 'wooded') chance = 3;                                   // Woods 3/10
+    else if (kind === 'elevated') chance = (terrain.elevTier >= 2 ? 1 : 2); // Mountainous 1/10, иначе Hills 2/10
+    else if (kind === 'elevatedWooded') chance = (terrain.elevTier >= 2 ? 1 : 2); // составной: наименьший из woods(3) и elevated
+    else if (kind === 'open') chance = 6;                                // Open 6/10
+    else chance = 6;
+    const v = roll(10); if (log) log.push({ d: 10, v: v, k: 'population' });
+    return v <= chance;
 }
 
 const NAME_PRE = ['Fal', 'Kel', 'Thorn', 'Black', 'Grey', 'Ash', 'Oak', 'Red', 'Stone', 'Iron', 'Briar', 'Dun', 'Cold', 'Silver', 'Wolf', 'Raven', 'Elm', 'Hawk', 'Cinder', 'Frost', 'High', 'North', 'South', 'East', 'West', 'Dark', 'Bright', 'Moor', 'Wind', 'Star', 'Sun', 'Moon', 'Rose', 'Hart', 'Bear', 'Boar', 'Wyrm', 'Deep', 'Green', 'Gold', 'Barrow', 'Kettle', 'Yarrow', 'Grim', 'King', 'Rook', 'Riv', 'Sol', 'Hal', 'Mar', 'Car', 'Bel', 'Ald', 'Eld'];
@@ -476,28 +543,38 @@ function fortIcon(base, fort) {
     return base;
 }
 
-function generateSettlement(log) {
-    const r = roll(6);
-    if (log) log.push({ d: 6, v: r, k: 'settlement' });
+function generateSettlement(log, die) {
+    die = die || 6;
+    const r = clamp(roll(die), 1, 6); // CoZ, стр. 9: цивилизация — d6, фронтир — d4, дикость — d2
+    if (log) log.push({ d: die, v: r, k: 'settlement' });
     switch (r) {
-        case 1: {
-            const population = 10000 + 1000 * (roll(11) - 1);
-            const k = roll(10); if (log) log.push({ d: 10, v: k, k: 'keep' });
-            const keep = k <= 6 ? '1' : (k === 7 ? 'нет' : '2');
-            const c = roll(6); if (log) log.push({ d: 6, v: c, k: 'castles' });
-            let castleTxt = 'нет замков';
-            if (c <= 2) { castleTxt = 'замок «' + genName() + '» со свитой'; }
-            else if (c === 3) { castleTxt = '2 замка: «' + genName() + '» и «' + genName() + '»'; }
-            const m = roll(6); if (log) log.push({ d: 6, v: m, k: 'mix' });
-            let mix;
-            if (m <= 3) mix = 'равная смесь ' + subRoll(4, 10, 1, log, 'хутора и деревни') + ' хуторов и деревень';
-            else if (m <= 5) { const n = subRoll(4, 10, 1, log, 'хутора'); mix = n + ' ' + plural(n, ['хутор', 'хутора', 'хуторов']) + ' и разрозненные фермы'; }
-            else { const n = subRoll(2, 4, 10, log, 'фермы'); mix = n + ' ' + plural(n, ['разрозненная ферма', 'разрозненные фермы', 'разрозненных ферм']); }
-            const fort = (c <= 2 || c === 3) ? 'castle' : (k !== 7 ? 'keep' : 'none');
-            const name = genName();
-            return { icon: fortIcon('🏙️', fort), fort: fort, pop: 'Огороженный город «' + name + '» (' + fmtNum(population) + ' чел.)', detail: 'Твердыня (Keep): ' + keep + '. Замки: ' + castleTxt + '. Окружение: ' + mix + '.', name: name, castleNames: [] };
+        case 1: { // 10–60 разрозненных ферм (CoZ, стр. 10)
+            const n = subRoll(1, 6, 10, log, 'фермы');
+            const b = roll(6); if (log) log.push({ d: 6, v: b, k: 'blockhouse' });
+            let block = '';
+            if (b <= 2) { const bl = roll(3); block = 'Есть ' + bl + ' ' + plural(bl, ['запертый блокгауз', 'запертых блокгауза', 'запертых блокгаузов']) + ' с припасами.'; }
+            return { icon: '🌾', fort: 'none', pop: n + ' ' + plural(n, ['разрозненная изолированная ферма', 'разрозненные изолированные фермы', 'разрозненных изолированных ферм']) + ' (по 1–20 чел.)', detail: block, name: null, castleNames: [] };
         }
-        case 2: {
+        case 2: { // 4–40 открытых хуторов
+            const n = subRoll(4, 10, 1, log, 'открытые хутора');
+            const c = roll(6); if (log) log.push({ d: 6, v: c, k: 'castle' });
+            const castleTxt = c <= 3 ? 'Замок «' + genName() + '» со свитой.' : '';
+            const fort = c <= 3 ? 'castle' : 'none';
+            return { icon: fortIcon('🛖', fort), fort: fort, pop: n + ' ' + plural(n, ['открытый хутор', 'открытых хутора', 'открытых хуторов']) + ' (по 10–100 чел.)', detail: castleTxt, name: null, castleNames: [] };
+        }
+        case 3:
+        case 4: { // 2–10 деревень
+            const n = subRoll(2, 5, 1, log, 'деревни');
+            const d = roll(12); if (log) log.push({ d: 12, v: d, k: 'def' });
+            const def = d <= 4 ? 'Твердыня (Keep)' : (d <= 8 ? 'Стена' : (d <= 10 ? 'Стена и Твердыня (Keep)' : 'отсутствует'));
+            const c = roll(6); if (log) log.push({ d: 6, v: c, k: 'castle' });
+            const castleTxt = c <= 2 ? 'Замок «' + genName() + '» со свитой' : '';
+            const parts = ['Оборона: ' + def];
+            if (castleTxt) parts.push(castleTxt);
+            const fort = c <= 2 ? 'castle' : ((d <= 4 || (d >= 9 && d <= 10)) ? 'keep' : (d <= 8 ? 'wall' : 'none'));
+            return { icon: fortIcon('🏡', fort), fort: fort, pop: n + ' ' + plural(n, ['деревня', 'деревни', 'деревень']) + ' (по 100–1000 чел.)', detail: parts.join('. ') + '.', name: null, castleNames: [] };
+        }
+        case 5: { // Огороженный город 1 000 – 10 000
             const population = 1000 + 1000 * (roll(10) - 1);
             const d = roll(12); if (log) log.push({ d: 12, v: d, k: 'def' });
             const def = d <= 4 ? 'Твердыня (Keep)' : (d <= 10 ? 'Стена' : 'отсутствует');
@@ -512,32 +589,22 @@ function generateSettlement(log) {
             const name = genName();
             return { icon: fortIcon('🏘️', fort), fort: fort, pop: 'Огороженный город «' + name + '» (' + fmtNum(population) + ' чел.)', detail: parts.join('. ') + '.', name: name, castleNames: [] };
         }
-        case 3: {
-            const n = subRoll(4, 10, 1, log, 'открытые хутора');
-            const c = roll(6); if (log) log.push({ d: 6, v: c, k: 'castle' });
-            let castleTxt = '';
-            if (c <= 3) castleTxt = 'Замок «' + genName() + '» со свитой.';
-            const fort = c <= 3 ? 'castle' : 'none';
-            return { icon: fortIcon('🛖', fort), fort: fort, pop: n + ' ' + plural(n, ['открытый хутор', 'открытых хутора', 'открытых хуторов']) + ' (по 10–100 чел.)', detail: castleTxt, name: null, castleNames: [] };
-        }
-        case 4:
-        case 5: {
-            const n = subRoll(2, 5, 1, log, 'деревни');
-            const d = roll(12); if (log) log.push({ d: 12, v: d, k: 'def' });
-            const def = d <= 4 ? 'Твердыня (Keep)' : (d <= 8 ? 'Стена' : (d <= 10 ? 'Стена и Твердыня (Keep)' : 'отсутствует'));
-            const c = roll(6); if (log) log.push({ d: 6, v: c, k: 'castle' });
-            const castleTxt = c <= 2 ? 'Замок «' + genName() + '» со свитой' : '';
-            const parts = ['Оборона: ' + def];
-            if (castleTxt) parts.push(castleTxt);
-            const fort = c <= 2 ? 'castle' : ((d <= 4 || (d >= 9 && d <= 10)) ? 'keep' : (d <= 8 ? 'wall' : 'none'));
-            return { icon: fortIcon('🏡', fort), fort: fort, pop: n + ' ' + plural(n, ['деревня', 'деревни', 'деревень']) + ' (по 100–1000 чел.)', detail: parts.join('. ') + '.', name: null, castleNames: [] };
-        }
-        default: {
-            const n = subRoll(1, 6, 10, log, 'фермы');
-            const b = roll(6); if (log) log.push({ d: 6, v: b, k: 'blockhouse' });
-            let block = '';
-            if (b <= 2) { const bl = roll(3); block = 'Есть ' + bl + ' ' + plural(bl, ['запертый блокгауз', 'запертых блокгауза', 'запертых блокгаузов']) + ' с припасами.'; }
-            return { icon: '🌾', fort: 'none', pop: n + ' ' + plural(n, ['разрозненная изолированная ферма', 'разрозненные изолированные фермы', 'разрозненных изолированных ферм']) + ' (по 1–20 чел.)', detail: block, name: null, castleNames: [] };
+        default: { // Огороженный город 10 000 – 20 000
+            const population = 10000 + 1000 * (roll(11) - 1);
+            const k = roll(10); if (log) log.push({ d: 10, v: k, k: 'keep' });
+            const keep = k <= 6 ? '1' : (k === 7 ? 'нет' : '2');
+            const c = roll(6); if (log) log.push({ d: 6, v: c, k: 'castles' });
+            let castleTxt = 'нет замков';
+            if (c <= 2) { castleTxt = 'замок «' + genName() + '» со свитой'; }
+            else if (c === 3) { castleTxt = '2 замка: «' + genName() + '» и «' + genName() + '»'; }
+            const m = roll(6); if (log) log.push({ d: 6, v: m, k: 'mix' });
+            let mix;
+            if (m <= 3) mix = 'равная смесь ' + subRoll(4, 10, 1, log, 'хутора и деревни') + ' хуторов и деревень';
+            else if (m <= 5) { const n = subRoll(4, 10, 1, log, 'хутора'); mix = n + ' ' + plural(n, ['хутор', 'хутора', 'хуторов']) + ' и разрозненные фермы'; }
+            else { const n = subRoll(2, 4, 10, log, 'фермы'); mix = n + ' ' + plural(n, ['разрозненная ферма', 'разрозненные фермы', 'разрозненных ферм']); }
+            const fort = (c <= 3) ? 'castle' : (k !== 7 ? 'keep' : 'none');
+            const name = genName();
+            return { icon: fortIcon('🏙️', fort), fort: fort, pop: 'Огороженный город «' + name + '» (' + fmtNum(population) + ' чел.)', detail: 'Твердыня (Keep): ' + keep + '. Замки: ' + castleTxt + '. Окружение: ' + mix + '.', name: name, castleNames: [] };
         }
     }
 }
@@ -655,8 +722,8 @@ function initMap() {
 
             let settlement = null;
             const isIsland = ocean && terrain.water === 'Остров';
-            if ((ocean ? isIsland : true) && isPopulated(biome, terrain.kind)) {
-                settlement = generateSettlement();
+            if ((ocean ? isIsland : true) && isPopulated(biome, terrain)) {
+                settlement = generateSettlement(null, settleDieFor('map'));
             }
 
             const path = createHexPath(c.x, c.y, HEX);
@@ -797,7 +864,7 @@ function buildMd() {
         lines.push('- **Гекс ' + f.h.num + '** — ' + f.txt + '.');
     });
     lines.push('');
-    lines.push('*Unofficial unlicensed product designed for use with Dragons at Dawn.*');
+    lines.push('*Unofficial unlicensed product designed for use with Dragons at Dawn and Champions of ZED.*');
     return lines.join('\n');
 }
 
@@ -813,24 +880,332 @@ document.getElementById('exportMd').addEventListener('click', function () {
 /* ================= ENCOUNTER GENERATOR ================= */
 
 const CREATURE_TYPE = {
-    'Open Land': ['Humanoid', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Normal', 'Human', 'Normal', 'Dragon'],
-    'Forest': ['Human', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Lycanthropes', 'Human', 'Normal', 'Dragon'],
-    'Lakes and Rivers': ['Human', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Normal', 'Fantastic', 'Normal', 'Dragon'],
-    'Swamps': ['Human', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Normal', 'Undead', 'Undead', 'Dragon'],
-    'Mountains': ['Human', 'Fantastic', 'Humanoid', 'Lycanthropes', 'Normal', 'Humanoid', 'Dragon', 'Dragon'],
-    'Deserts': ['Human', 'Fantastic', 'Humanoid', 'Human', 'Normal', 'Dragon', '-', '-'],
-    'Ocean': ['Human', 'Fantastic', 'Humanoid', 'Undead', 'Normal', '-', '-', '-'],
+    // CoZ, стр. 11 — четыре террейна, заданные автором
+    'Open Land': ['Humanoid', 'Human', 'Humanoid', 'Lycanthropes', 'Non-humanoid', 'Human', 'Non-humanoid', 'Dragon'],
+    'Forest': ['Human', 'Non-humanoid', 'Humanoid', 'Lycanthropes', 'Lycanthropes', 'Human', 'Non-humanoid', 'Dragon'],
+    'Lakes and Rivers': ['Human', 'Non-humanoid', 'Humanoid', 'Lycanthropes', 'Non-humanoid', 'Non-humanoid', 'Non-humanoid', 'Dragon'],
+    'Swamps': ['Human', 'Non-humanoid', 'Humanoid', 'Lycanthropes', 'Non-humanoid', 'Undead', 'Undead', 'Dragon'],
+    // Террейны, не заданные в CoZ: пример по DaD (Fantastic/Normal сведены в Non-humanoid); рефери может изменить
+    'Mountains': ['Human', 'Non-humanoid', 'Humanoid', 'Lycanthropes', 'Non-humanoid', 'Humanoid', 'Dragon', 'Dragon'],
+    'Deserts': ['Human', 'Non-humanoid', 'Humanoid', 'Human', 'Non-humanoid', 'Dragon', '-', '-'],
+    'Ocean': ['Human', 'Non-humanoid', 'Humanoid', 'Undead', 'Non-humanoid', '-', '-', '-'],
     'Cities': ['Human', 'Undead', 'Undead', 'Human', '-', '-', '-', '-']
 };
 
 const CREATURE_TABLES = {
-    'Humanoid': { die: 10, entries: ['Dwarves', 'Elves', 'Giants', 'Goblins', 'Halflings', 'Hobgoblins', 'Kobolds', 'Ogres', 'Orcs, Giant', 'Orcs, tribal'] },
-    'Fantastic': { die: 12, entries: ['Basilisks', 'Centaurs', 'Cockatrices', 'Dragons', 'Elemental, Air', 'Elemental, Earth', 'Elemental, Fire', 'Elemental, Water', 'Treant', 'Troll', 'True Troll', 'Unicorn'] },
+    'Humanoid': { die: 10, entries: ['Dwarves', 'Elves', 'Giants', 'Goblins', 'Hobbits', 'Hobgoblins', 'Kobolds', 'Ogres', 'Orcs, Giant', 'Orcs, tribal'] },
+    'Non-humanoid': { die: 20, entries: ['Balarauk', 'Basilisks', 'Centaurs', 'Cockatrices', 'Elemental, Air', 'Elemental, Earth', 'Elemental, Fire', 'Elemental, Water', 'Giant Eagle', 'Giant Wolves', 'Treant', 'Roc', 'Tarn, Cargo', 'Tarn, War', 'Thoat, Light', 'Thoat, Heavy', 'Troll', 'True Troll', 'Unicorn', 'Wargs'] },
     'Humans': { die: 8, entries: ['Bandits', 'Bandits', 'Rebels', 'Retainers', 'Retainers', 'Retainers', 'Angry Mob', 'Nomads'] },
     'Lycanthropes': { die: 6, entries: ['Werewolves', 'Werewolves', 'Werebears', 'Werebears', 'Werelions/tigers', 'Werelions/tigers'] },
-    'Normal': { die: 8, entries: ['Giant Eagle', 'Giant Wolves', 'Roc', 'Tarn, Cargo', 'Tarn, Racing', 'Tarn, War', 'Thoat', 'Wargs'] },
-    'Undead': { die: 6, entries: ['Ghouls', 'Sarcophagus Skeleton', 'Wights', 'Wraiths', 'Vampire', 'Zombies'] }
+    'Undead': { die: 6, entries: ['Ghouls', 'Skeletons', 'Wights', 'Wraiths', 'Vampire', 'Zombies'] }
 };
+
+// CoZ, Appendix I «On Monsters & Men», сводная таблица, стр. 161–162.
+// num:[min,max] — Number Appearing; lair — % in Lair; ac/hd — класс брони и кости хитов; trsr — тип сокровища; nc — некомбатанты.
+const MONSTER_ROSTER = {
+    'Balarauk': { num: [1, 6], lair: 33, ac: 2, hd: 10, trsr: 'F' },
+    'Basilisks': { num: [1, 6], lair: 84, ac: 4, hd: '6+1', trsr: 'G' },
+    'Centaurs': { num: [2, 20], lair: 5, ac: 5, hd: 4, trsr: 'A', nc: 'в логове самки превосходят самцов 2:1; молодняк — примерно столько же, сколько самцов' },
+    'Cockatrices': { num: [1, 8], lair: 35, ac: 6, hd: 5, trsr: 'D' },
+    'Dragon': { num: [1, 4], lair: 60, ac: 2, hd: '1-12', trsr: 'H', note: '% в логове = шанс, что дракон заговорит (стр. 158)' },
+    'Dwarves': { num: [4, 400], lair: 50, ac: 4, hd: 1, trsr: 'G' },
+    'Elemental, Air': { num: [1, 1], lair: null, ac: 2, hd: 8, trsr: '-' },
+    'Elemental, Earth': { num: [1, 1], lair: null, ac: 2, hd: 8, trsr: '-' },
+    'Elemental, Fire': { num: [1, 1], lair: null, ac: 2, hd: 8, trsr: '-' },
+    'Elemental, Water': { num: [1, 1], lair: null, ac: 2, hd: 8, trsr: '-' },
+    'Elves': { num: [30, 300], lair: 25, ac: 4, hd: '1+1', trsr: 'E' },
+    'Ghouls': { num: [1, 200], lair: 65, ac: 6, hd: 3, trsr: 'E' },
+    'Giants': { num: [1, 8], lair: 40, ac: 4, hd: '8-12', trsr: 'E' },
+    'Giant Eagle': { num: [2, 200], lair: 5, ac: 4, hd: 12, trsr: 'O' },
+    'Giant Wolves': { num: [3, 12], lair: 10, ac: 6, hd: '3+3', trsr: '-' },
+    'Goblins': { num: [30, 300], lair: 40, ac: 6, hd: '½', trsr: 'C', nc: '+60% женщины-некомбатанты и +5–10% детей' },
+    'Hobbits': { num: [30, 300], lair: 70, ac: 9, hd: 1, trsr: 'B' },
+    'Hobgoblins': { num: [10, 100], lair: 40, ac: 5, hd: '1+1', trsr: 'D', nc: '+5–10% детей' },
+    'Kobolds': { num: [30, 300], lair: 40, ac: 7, hd: '½', trsr: 'C' },
+    'Ogres': { num: [2, 20], lair: 30, ac: 5, hd: '4+1', trsr: 'B' },
+    'Orcs, Giant': { num: [30, 300], lair: 50, ac: 6, hd: 1, trsr: 'D', nc: '+70% женщины и +10–15% детей' },
+    'Orcs, tribal': { num: [30, 300], lair: 50, ac: 6, hd: '½', trsr: 'C', nc: '+70% женщины и +10–15% детей' },
+    'Roc': { num: [1, 20], lair: 16, ac: 4, hd: '3+1', trsr: 'I' },
+    'Tarn, Cargo': { num: [1, 20], lair: null, ac: 3, hd: 5, trsr: '-' },
+    'Tarn, Racing': { num: [1, 100], lair: null, ac: 4, hd: 2, trsr: '-' },
+    'Tarn, War': { num: [1, 300], lair: null, ac: 3, hd: 8, trsr: '-' },
+    'Thoat, Heavy': { num: [1, 10], lair: null, ac: 7, hd: 8, trsr: '-' },
+    'Thoat, Light': { num: [6, 30], lair: null, ac: 7, hd: 5, trsr: '-' },
+    'Treant': { num: [2, 20], lair: 100, ac: 2, hd: 8, trsr: '-' },
+    'Troll': { num: [2, 16], lair: 16, ac: 4, hd: 5, trsr: 'D', note: '+20% шанс 1d6 пленников' },
+    'True Troll': { num: [1, 1], lair: 60, ac: 4, hd: 12, trsr: 'G' },
+    'Unicorn': { num: [1, 4], lair: null, ac: 2, hd: 4, trsr: '-' },
+    'Wargs': { num: [2, 8], lair: 10, ac: '4+4', hd: 1, trsr: 'I' },
+    'Wights': { num: [2, 24], lair: 80, ac: 5, hd: 3, trsr: 'E' },
+    'Wraiths': { num: [2, 16], lair: 20, ac: 3, hd: 4, trsr: 'E' },
+    'Zombies': { num: [3, 30], lair: 20, ac: 8, hd: 1, trsr: 'I' },
+    // Ликантропы: в сводной таблице CoZ есть базовая строка «Lycanthrope» и «Lycanthrope WereBear» (AC/HD — см. описание)
+    'Werewolves': { num: [2, 20], lair: 15, ac: '*', hd: '*', trsr: 'C' },
+    'Werebears': { num: [1, 1], lair: 15, ac: '*', hd: '*', trsr: 'C' },
+    'Werelions/tigers': { num: [2, 20], lair: 15, ac: '*', hd: '*', trsr: 'C' },
+    // Люди (стр. 158–160): % в логове и тип сокровища книгой не заданы
+    'Bandits': { num: [1, 500], lair: null, ac: null, hd: 1, trsr: null },
+    'Rebels': { num: [1, 500], lair: null, ac: null, hd: 1, trsr: null },
+    'Angry Mob': { num: [1, 100], lair: null, ac: null, hd: 1, trsr: null },
+    'Nomads': { num: [2, 12], lair: null, ac: null, hd: null, trsr: null, note: '2–12 фургонов, по 2–12 человек в каждом' },
+    'Retainers': { num: null, lair: null, ac: null, hd: null, trsr: null, note: 'численность определяется по таблицам лидера (стр. 159)' }
+};
+
+// Диапазон Number Appearing → «чистые» кубики (соглашение проекта); иначе — равномерный бросок
+const RANGE_DICE = {
+    '1-4': '1d4', '1-6': '1d6', '1-8': '1d8', '1-10': '1d10', '1-20': '1d20', '1-100': '1d100',
+    '1-200': '2d100', '1-300': '3d100', '1-500': '5d100',
+    '2-8': '2d4', '2-12': '2d6', '2-16': '2d8', '2-20': '2d10', '2-24': '2d12', '2-200': '2d100',
+    '3-12': '3d4', '3-30': '3d10',
+    '4-40': '4d10', '4-400': '4d100',
+    '10-100': '1d10×10', '30-300': '3d10×10'
+};
+
+function rollRange(min, max, log) {
+    const expr = RANGE_DICE[min + '-' + max];
+    let v, label;
+    const m = expr && expr.match(/^(\d+)d(\d+)(?:×(\d+))?$/);
+    if (m) {
+        label = expr;
+        v = rollSum(parseInt(m[1]), parseInt(m[2])) * (m[3] ? parseInt(m[3]) : 1);
+        if (v < min) v = min;
+        if (v > max) v = max;
+    } else {
+        v = min + Math.floor(Math.random() * (max - min + 1));
+        label = 'равномерно ' + min + '–' + max;
+    }
+    if (log) log.push({ k: 'num', label: label, v: v });
+    return { value: v, label: label };
+}
+
+function rosterOf(name) { return MONSTER_ROSTER[name] || null; }
+
+function rosterHtml(entry) {
+    if (!entry) return '';
+    const rows = [];
+    rows.push('AC <b>' + (entry.ac != null ? entry.ac : '—') + '</b>');
+    rows.push('HD <b>' + (entry.hd != null ? entry.hd : '—') + '</b>');
+    rows.push('% в логове <b>' + (entry.lair != null ? entry.lair + '%' : '—') + '</b>');
+    rows.push('Сокровище <b>' + (entry.trsr || '—') + '</b>');
+    let html = rows.join(' &middot; ');
+    if (entry.nc) html += '<br><span class="muted">Некомбатанты: ' + entry.nc + '</span>';
+    if (entry.note) html += '<br><span class="muted">' + entry.note + '</span>';
+    return html;
+}
+
+/* ================= TREASURE (CoZ, Part IX, стр. 144–145) ================= */
+// Кубики записаны как [кол-во, грань, множитель]. null = сокровища этого вида нет.
+
+const TREASURE_TYPES = {
+    'A: Water': {
+        copper: null, silver: null,
+        gold: { p: 75, d: [1, 6, 100] },
+        electrum: { p: 80, d: [5, 4, 10] },
+        art: { p: 75, d: [1, 6, 10] },
+        gems: { p: 75, d: [1, 6, 10] },
+        prize: [
+            { p: 50, kind: 'map' },
+            { p: 75, kind: 'items', count: 3, filter: 'nonweapon' },
+            { p: 95, kind: 'captives', d: [1, 10, 1] }
+        ]
+    },
+    'A: Land': {
+        copper: null,
+        silver: { p: 40, d: [1, 6, 1000] },
+        gold: { p: 25, d: [2, 6, 100] },
+        electrum: { p: 40, d: [1, 6, 1000] },
+        art: { p: 25, d: [6, 6, 1] },
+        gems: { p: 65, d: [6, 6, 1] },
+        prize: [
+            { p: 50, kind: 'items', count: 3 },
+            { p: 95, kind: 'captives', d: [1, 20, 1] }
+        ]
+    },
+    'B': {
+        copper: { p: 50, d: [1, 6, 1000] },
+        silver: { p: 25, d: [1, 6, 100] },
+        gold: { p: 25, d: [1, 6, 10] },
+        electrum: { p: 50, d: [4, 8, 1] },
+        art: null,
+        gems: { p: 25, d: [1, 6, 1] },
+        prize: [{ p: 10, kind: 'items', count: 1, filter: 'weaponarmor' }]
+    },
+    'C': {
+        copper: { p: 5, d: [1, 10, 1000] },
+        silver: { p: 50, d: [1, 12, 1000] },
+        gold: { p: 25, d: [1, 8, 100] },
+        electrum: { p: 40, d: [2, 6, 10] },
+        art: { p: 10, d: [1, 4, 1] },
+        gems: { p: 10, d: [1, 4, 1] },
+        prize: [{ p: 15, kind: 'items', count: 2 }]
+    },
+    'D': {
+        copper: { p: 5, d: [1, 8, 1000] },
+        silver: { p: 10, d: [1, 12, 1000] },
+        gold: { p: 60, d: [1, 6, 1000] },
+        electrum: null,
+        art: { p: 25, d: [1, 6, 1] },
+        gems: { p: 25, d: [1, 6, 1] },
+        prize: [{ p: 25, kind: 'items', count: 3 }]
+    },
+    'E': {
+        copper: null,
+        silver: { p: 10, d: [1, 12, 1000] },
+        gold: { p: 25, d: [1, 8, 1000] },
+        electrum: { p: 50, d: [1, 8, 100] },
+        art: { p: 10, d: [1, 8, 1] },
+        gems: { p: 10, d: [1, 8, 1] },
+        prize: [{ p: 50, kind: 'items', countDice: [1, 4, 1] }]
+    },
+    'F': {
+        copper: null, silver: null,
+        gold: { p: 50, d: [1, 12, 1000] },
+        electrum: { p: 20, d: [1, 6, 1000] },
+        art: { p: 10, d: [1, 8, 1] },
+        gems: { p: 25, d: [1, 12, 1] },
+        prize: [{ p: 50, kind: 'items', countDice: [1, 5, 1], filter: 'nonweapon' }]
+    },
+    'G': {
+        copper: null, silver: null, gold: null, electrum: null,
+        art: { p: 15, d: [1, 8, 1] },
+        gems: { p: 25, d: [1, 12, 1] },
+        prize: [{ p: 50, kind: 'items', countDice: [1, 3, 1] }]
+    },
+    'H': {
+        copper: { p: 25, d: [2, 12, 1000] },
+        silver: { p: 50, d: [1, 10, 1000] },
+        gold: { p: 75, d: [1, 6, 10000] },
+        electrum: { p: 75, d: [1, 8, 1000] },
+        art: { p: 50, d: [6, 6, 1] },
+        gems: { p: 50, d: [1, 6, 10] },
+        prize: [{ p: 25, kind: 'items', countDice: [1, 6, 1] }]
+    },
+    'I': {
+        copper: null, silver: null, gold: null, electrum: null,
+        art: { p: 30, d: [2, 8, 1] },
+        gems: { p: 50, d: [2, 8, 1] },
+        prize: [{ p: 30, kind: 'items', count: 1 }]
+    }
+};
+
+// Типы ювелирных изделий и предметов искусства (CoZ, стр. 145), d% 1–100
+const JEWELRY_TYPES = [
+    [1, 6, 'Anklet'], [7, 12, 'Belt'], [13, 14, 'Bowl'], [15, 21, 'Bracelet'],
+    [22, 27, 'Brooch'], [28, 32, 'Buckle'], [33, 37, 'Chain'], [38, 40, 'Choker'],
+    [41, 42, 'Circlet'], [43, 47, 'Clasp'], [48, 51, 'Comb'], [52, 52, 'Crown'],
+    [53, 55, 'Cup'], [56, 62, 'Earring'], [63, 65, 'Flagon'], [66, 68, 'Goblet'],
+    [69, 73, 'Knife'], [74, 77, 'Locket'], [78, 80, 'Medal'], [81, 82, 'Necklace'],
+    [83, 89, 'Painting'], [90, 90, 'Plate'], [91, 95, 'Pin'], [96, 96, 'Sceptre'],
+    [97, 99, 'Statue'], [100, 100, 'Tiara']
+];
+
+// Категории призовых предметов (CoZ, стр. 145), d%
+const PRIZE_ITEM_TYPE = [
+    [1, 12, 'Magical Armour', 'armour'],
+    [13, 32, 'Magical Swords', 'swords'],
+    [33, 44, 'Magical Weapons', 'weapons'],
+    [45, 57, 'Maps and Manuscripts', 'maps'],
+    [58, 64, 'Miscellaneous Magic', 'misc'],
+    [65, 79, 'Potions', 'potions'],
+    [80, 82, 'Rings, Amulets, Medallions', 'rings'],
+    [83, 95, 'Scrolls and Spellbooks', 'scrolls'],
+    [96, 100, 'Wands and Staves', 'wands']
+];
+
+function rollDice(d) { return rollSum(d[0], d[1]) * (d[2] || 1); }
+function diceLabel(d) { return d[0] + 'd' + d[1] + (d[2] > 1 ? '×' + fmtNum(d[2]) : ''); }
+
+function rangePick(list) {
+    const r = roll(100);
+    for (let i = 0; i < list.length; i++) { if (r >= list[i][0] && r <= list[i][1]) return list[i]; }
+    return list[list.length - 1];
+}
+
+// CoZ, стр. 145: базис d6 (1=1000, 2=500, 3–6=100) + коррекция по 2d6
+function gemValue() {
+    const b = roll(6);
+    const base = b === 1 ? 1000 : (b === 2 ? 500 : 100);
+    const a = rollSum(2, 6);
+    let f;
+    if (a === 2) f = -0.9;
+    else if (a <= 4) f = -0.5;
+    else if (a <= 9) f = 1;
+    else if (a === 10) f = 1.5;
+    else if (a === 11) f = 2;
+    else f = roll(4) + roll(6);
+    return Math.max(1, Math.round(base * f));
+}
+
+// CoZ, стр. 145: база d6 (1–3=100, 4–6=1000); для 100 — 3d6×100, для 1000 — 1d6×1000
+function jewelryValue() {
+    return roll(6) <= 3 ? rollSum(3, 6) * 100 : rollSum(1, 6) * 1000;
+}
+
+function prizeEntry(filter) {
+    for (let i = 0; i < 300; i++) {
+        const e = rangePick(PRIZE_ITEM_TYPE);
+        if (!filter) return e;
+        if (filter === 'nonweapon' && ['maps', 'misc', 'potions', 'rings', 'scrolls', 'wands'].indexOf(e[3]) >= 0) return e;
+        if (filter === 'weaponarmor' && ['armour', 'swords', 'weapons'].indexOf(e[3]) >= 0) return e;
+    }
+    return PRIZE_ITEM_TYPE[5];
+}
+
+// Генерация сокровища логова. Возвращает { html, total, has }.
+function genTreasureHtml(key) {
+    const t = TREASURE_TYPES[key];
+    if (!t) return { html: '<span class="muted">Тип «' + key + '» в таблице CoZ (A–I) не описан — решает рефери.</span>', total: null, has: null };
+    const parts = [];
+    let totalGp = 0;
+
+    const coinDefs = [['copper', 'медь (cp)', 0.01], ['silver', 'серебро (sp)', 0.1], ['gold', 'золото (gp)', 1], ['electrum', 'электрум (ep)', 0.5]];
+    const coins = [];
+    coinDefs.forEach(function (cd) {
+        const c = t[cd[0]];
+        if (!c) return;
+        if (roll(100) <= c.p) { const v = rollDice(c.d); totalGp += v * cd[2]; coins.push(fmtNum(v) + ' ' + cd[1]); }
+    });
+    parts.push('Монеты: ' + (coins.length ? '<b>' + coins.join(', ') + '</b>' : 'нет'));
+
+    const gems = [];
+    if (t.gems && roll(100) <= t.gems.p) {
+        const n = rollDice(t.gems.d);
+        for (let i = 0; i < n; i++) gems.push(gemValue());
+        totalGp += gems.reduce(function (a, b) { return a + b; }, 0);
+        parts.push('Камни: <b>' + n + '</b> — ' + gems.map(fmtNum).join(', ') + ' GP');
+    } else parts.push('Камни: нет');
+
+    const arts = [];
+    if (t.art && roll(100) <= t.art.p) {
+        const n = rollDice(t.art.d);
+        for (let i = 0; i < n; i++) { const ty = rangePick(JEWELRY_TYPES)[2]; const val = jewelryValue(); arts.push(ty + ' (' + fmtNum(val) + ' GP)'); totalGp += val; }
+        parts.push('Ювелирка/арт: <b>' + n + '</b> — ' + arts.join('; '));
+    } else parts.push('Ювелирка/арт: нет');
+
+    const items = {};
+    let maps = 0, captives = 0, itemTries = 0;
+    (t.prize || []).forEach(function (rule) {
+        if (rule.kind === 'items') {
+            const tries = rule.count || rollDice(rule.countDice);
+            for (let i = 0; i < tries; i++) {
+                itemTries++;
+                if (roll(100) <= rule.p) { const e = prizeEntry(rule.filter); items[e[2]] = (items[e[2]] || 0) + 1; }
+            }
+        } else if (rule.kind === 'map') {
+            if (roll(100) <= rule.p) maps++;
+        } else if (rule.kind === 'captives') {
+            if (roll(100) <= rule.p) captives = rollDice(rule.d);
+        }
+    });
+    const itemList = Object.keys(items).map(function (k) { return k + ' ×' + items[k]; });
+    parts.push('Призовые предметы (категории): ' + (itemList.length ? '<b>' + itemList.join(', ') + '</b> <span class="muted">(детализация предметов — следующая итерация)</span>' : 'нет'));
+    if (maps) parts.push('Карта(ы): <b>' + maps + '</b> <span class="muted">(детали — CoZ стр. 150)</span>');
+    if (captives) parts.push('Пленники: <b>' + captives + '</b>');
+
+    const has = coins.length || gems.length || arts.length || itemList.length || maps || captives;
+    parts.push('<span class="muted">Оценка монет/камней/ювелирки: ~' + fmtNum(Math.round(totalGp)) + ' GP (без призовых предметов).</span>');
+    return { html: parts.join('<br>'), total: totalGp, has: !!has };
+}
 
 const LAIR_TYPES = {
     1: { name: 'Industrial/Commercial Buildings', roll: function () { return 'строений: ' + rollSum(2, 6) + ', комнат в каждом: ' + roll(6) + ', проходов: ' + roll(12) + ', подземных уровней: ' + roll(2); } },
@@ -968,26 +1343,46 @@ function startEncounter() {
     } while (type === '-');
     steps.push(encAdd('Тип существа', 'd8 = <b>' + dr + '</b> → <b>' + type + '</b>' + (attempts > 1 ? ' (переброс «—» ×' + (attempts - 1) + ')' : '') + '.'));
 
+    let creatureName = type;
     if (type === 'Dragon') {
         steps.push(encAdd('Существо', '<b>Dragon</b> — отдельной таблицы драконов в книге нет; конкретный вид определяет рефери.'));
     } else {
         const tableKey = type === 'Human' ? 'Humans' : type;
         const table = CREATURE_TABLES[tableKey];
         const cr = roll(table.die);
-        steps.push(encAdd('Существо', type + ': d' + table.die + ' = <b>' + cr + '</b> → <b>' + table.entries[cr - 1] + '</b>.'));
+        creatureName = table.entries[cr - 1];
+        steps.push(encAdd('Существо', type + ': d' + table.die + ' = <b>' + cr + '</b> → <b>' + creatureName + '</b>.'));
     }
 
-    encState = { terrain: terrain, mode: mode, road: road, pc: pc, type: type, steps1: steps.join('') };
+    const entry = rosterOf(creatureName);
+    if (entry) {
+        steps.push(encAdd('Данные существа (CoZ, Appendix I)', rosterHtml(entry)));
+    } else {
+        steps.push(encAdd('Данные существа', 'В сводной таблице CoZ нет строки для «' + creatureName + '» — данные задаёт рефери.'));
+    }
+
+    // Предзаполняем шаг 2 данными из ростера (рефери может переопределить)
+    const pctEl = document.getElementById('encPctLair');
+    const numEl = document.getElementById('encNum');
+    pctEl.value = (entry && entry.lair != null) ? entry.lair : '';
+    if (entry && entry.num) numEl.value = rollRange(entry.num[0], entry.num[1]).value;
+    else numEl.value = '';
+
+    encState = { terrain: terrain, mode: mode, road: road, pc: pc, type: type, creatureName: creatureName, roster: entry, steps1: steps.join('') };
     out.innerHTML = encState.steps1;
     document.getElementById('encStep2').style.display = '';
 }
 
 function continueEncounter() {
     if (!encState) return;
-    const pctRaw = document.getElementById('encPctLair').value;
-    const numRaw = document.getElementById('encNum').value;
+    const entry = encState.roster;
+    let pctRaw = document.getElementById('encPctLair').value;
+    let numRaw = document.getElementById('encNum').value;
+    let numLabel = null;
+    if (pctRaw === '' && entry && entry.lair != null) pctRaw = String(entry.lair);
+    if (numRaw === '' && entry && entry.num) { const rr = rollRange(entry.num[0], entry.num[1]); numRaw = String(rr.value); numLabel = rr.label; }
     if (pctRaw === '' || numRaw === '') {
-        alert('Введите % в логове и численность (из описания существа).');
+        alert('В книге нет данных для этого существа — введите % в логове и численность вручную.');
         return;
     }
     const pctLair = parseInt(pctRaw);
@@ -998,7 +1393,9 @@ function continueEncounter() {
     const d100 = roll(100);
     const found = d100 <= pctLair;
     steps.push(encAdd('% в логове', pctLair + '% → d100 = <b>' + d100 + '</b> → ' + (found ? '<b>логово найдено</b>' : 'логово не найдено') + '.'));
-    steps.push(encAdd('Численность', 'Задано рефери: <b>' + numAppear + '</b>.'));
+    const numInfo = (entry && entry.num) ? ('диапазон ' + entry.num[0] + '–' + entry.num[1] + (numLabel ? ' → ' + numLabel : '')) : 'задано рефери';
+    steps.push(encAdd('Численность', numInfo + ': <b>' + numAppear + '</b>.'));
+    if (entry && entry.nc) steps.push(encAdd('Некомбатанты', entry.nc));
 
     let lairName = '';
     if (found) {
@@ -1007,6 +1404,31 @@ function continueEncounter() {
         lairName = lair.name;
     } else {
         steps.push(encAdd('Логово', 'Логово не найдено — тип логова не определяется.'));
+    }
+
+    // Сокровище логова — генерируется только если логово найдено
+    if (found) {
+        const letter = entry ? entry.trsr : null;
+        if (letter === null || letter === undefined) {
+            steps.push(encAdd('Сокровище логова', '<span class="muted">Тип сокровища для этого существа в CoZ не задан — решает рефери.</span>'));
+        } else if (letter === '-') {
+            steps.push(encAdd('Сокровище логова', 'Тип сокровища «—»: сокровища нет.'));
+        } else if (letter === 'O') {
+            steps.push(encAdd('Сокровище логова', 'В таблице напечатано «O»; по описанию Giant Eagle (стр. 172) сокровища нет — не генерируем.'));
+        } else {
+            const aquatic = document.getElementById('encWaterLair').checked;
+            const key = letter === 'A' ? (aquatic ? 'A: Water' : 'A: Land') : letter;
+            const tres = genTreasureHtml(key);
+            steps.push(encAdd('Сокровище логова (CoZ, тип ' + key + ')', tres.html));
+        }
+    } else {
+        steps.push(encAdd('Сокровище логова', 'Логово не найдено — сокровища логова не определяются.'));
+    }
+
+    // Личное сокровище (CoZ, стр. 144)
+    if (document.getElementById('encIndividual').checked) {
+        const cp = roll(20), sp = roll(20), gp = roll(10);
+        steps.push(encAdd('Личное сокровище (стр. 144)', 'Немного меди: ' + cp + ' cp; серебро: <b>' + sp + ' sp</b>; золото: <b>' + gp + ' gp</b>. <span class="muted">У разумных существ, на усмотрение рефери.</span>'));
     }
 
     const pr = roll(6);
@@ -1050,6 +1472,54 @@ function continueEncounter() {
     out.innerHTML = encState.steps1 + steps.join('');
 }
 
+/* ================= TRAVEL: DIRECTION & GETTING LOST ================= */
+
+const DIRECTIONS = {
+    1: 'N (север)', 2: 'NE (северо-восток)', 3: 'SE (юго-восток)',
+    4: 'S (юг)', 5: 'SW (юго-запад)', 6: 'NW (северо-запад)'
+};
+
+function rollDirection() { const d = roll(6); return { roll: d, dir: DIRECTIONS[d] }; }
+
+function dirHandler() {
+    const r = rollDirection();
+    document.getElementById('dirResult').innerHTML = 'd6 = <b>' + r.roll + '</b> → <b>' + r.dir + '</b>.';
+}
+
+// CoZ, стр. 14: направление задаёт край-ориентир, затем 1d6 миль вглубь («6» = 0, логово на краю)
+function lairPlaceHandler() {
+    const r = rollDirection();
+    const miles = roll(6);
+    const mi = miles === 6 ? 0 : miles;
+    let html = 'Направление (d6 = <b>' + r.roll + '</b>): <b>' + r.dir + '</b> — край-ориентир. ';
+    html += 'Смещение вглубь (1d6 = <b>' + miles + '</b>): ' + (mi === 0 ? '<b>0 миль — логово на исходном краю гекса</b>' : '<b>' + mi + ' миль</b>') + '.';
+    document.getElementById('dirResult').innerHTML = html;
+}
+
+const LOST = {
+    clear: { name: 'Clear (открытая местность)', range: [1, 1] },
+    woods: { name: 'Woods (леса)', range: [1, 2] },
+    river: { name: 'River (река)', range: [1, 1] },
+    swamp: { name: 'Swamp/Jungle (болото/джунгли)', range: [1, 3] },
+    mountains: { name: 'Mountains (горы)', range: [1, 2] },
+    desert: { name: 'Desert (пустыня)', range: [1, 3] }
+};
+
+// CoZ, стр. 66–67: шанс потеряться по террейну; при потере — Direction Check
+function lostHandler() {
+    const out = document.getElementById('lostResult');
+    if (document.getElementById('lostIds').checked) {
+        out.innerHTML = 'Есть ориентир/карта/проводник — броска нет, группа идёт в нужном направлении.';
+        return;
+    }
+    const info = LOST[document.getElementById('lostTerrain').value];
+    const d = roll(6);
+    const lost = d >= info.range[0] && d <= info.range[1];
+    let html = info.name + ': потеряться на ' + setText(info.range) + ' (d6 = <b>' + d + '</b>) → <b>' + (lost ? 'заблудились' : 'идут верно') + '</b>.';
+    if (lost) { const r = rollDirection(); html += '<br>Direction Check: d6 = <b>' + r.roll + '</b> → фактическое направление движения: <b>' + r.dir + '</b>.'; }
+    out.innerHTML = html;
+}
+
 /* ================= HEX-FILL ROLL LOG ================= */
 
 const HISTORY_KEY = 'dadHexHistory';
@@ -1064,8 +1534,8 @@ function rollHexFull(biome, ocean) {
     let populated = false;
     let settlement = null;
     if (ocean ? isIsland : true) {
-        populated = isPopulated(biome, terrain.kind, log);
-        if (populated) settlement = generateSettlement(log);
+        populated = isPopulated(biome, terrain, log);
+        if (populated) settlement = generateSettlement(log, settleDieFor('roll'));
     }
     const biomeName = biome === 1 ? (ocean ? 'Ocean' : 'Arid') : BIOMES[biome - 1];
     return { biome: biome, ocean: ocean, biomeName: biomeName, terrain: terrain, populated: populated, settlement: settlement, log: log };
@@ -1139,17 +1609,25 @@ function clearHistory() {
 
 /* ================= INIT ================= */
 
+function applyDefaultDensity(which) {
+    const biome = parseInt(document.getElementById(which === 'roll' ? 'rollBiome' : 'biomeSelect').value);
+    const el = document.getElementById(which === 'roll' ? 'rollSettleDensity' : 'mapSettleDensity');
+    if (el) el.value = String(defaultDensityForBiome(biome));
+}
+
 function syncOcean() {
     document.getElementById('oceanWrap').style.display = document.getElementById('biomeSelect').value === '1' ? '' : 'none';
 }
-document.getElementById('biomeSelect').addEventListener('change', syncOcean);
+document.getElementById('biomeSelect').addEventListener('change', function () { syncOcean(); applyDefaultDensity('map'); });
 syncOcean();
 
 function syncRollOcean() {
     document.getElementById('rollOceanWrap').style.display = document.getElementById('rollBiome').value === '1' ? '' : 'none';
 }
-document.getElementById('rollBiome').addEventListener('change', syncRollOcean);
+document.getElementById('rollBiome').addEventListener('change', function () { syncRollOcean(); applyDefaultDensity('roll'); });
 syncRollOcean();
+applyDefaultDensity('map');
+applyDefaultDensity('roll');
 
 function syncEncMode() {
     document.getElementById('encFreqWrap').style.display = document.getElementById('encMode').value === 'travel' ? '' : 'none';
@@ -1157,8 +1635,20 @@ function syncEncMode() {
 document.getElementById('encMode').addEventListener('change', syncEncMode);
 syncEncMode();
 
+// A: Water автоматически для водных террейнов (рефери может снять галочку)
+function syncWaterLair() {
+    const t = document.getElementById('encTerrain').value;
+    document.getElementById('encWaterLair').checked = (t === 'Lakes and Rivers' || t === 'Ocean');
+}
+document.getElementById('encTerrain').addEventListener('change', syncWaterLair);
+syncWaterLair();
+
 document.getElementById('encButton').addEventListener('click', startEncounter);
 document.getElementById('encContinue').addEventListener('click', continueEncounter);
+
+document.getElementById('dirButton').addEventListener('click', dirHandler);
+document.getElementById('lairPlaceButton').addEventListener('click', lairPlaceHandler);
+document.getElementById('lostButton').addEventListener('click', lostHandler);
 
 document.getElementById('rollButton').addEventListener('click', rollOneHex);
 document.getElementById('clearHistory').addEventListener('click', clearHistory);
