@@ -318,7 +318,7 @@
     </div>
 
     <div class="step2-box" id="encStep2" style="display:none;">
-        <p><b>Шаг 2.</b> Значения подставлены из таблицы CoZ (Appendix I); можно переопределить вручную. Для существ без данных в книге (например, людей) введите значения сами.</p>
+        <p><b>Шаг 2.</b> Значения подставлены из таблицы CoZ (Appendix I); можно переопределить вручную. У существ без данных в книге (люди) логово не определяется, а численность ретейнеров генерируется по таблицам лидера (CoZ, стр. 158–159).</p>
         <label>% в логове: <input type="number" id="encPctLair" min="0" max="100"></label>
         <label>Численность: <input type="number" id="encNum" min="1" max="9999"></label>
         <button class="action" id="encContinue">Продолжить (шаг 2)</button>
@@ -330,9 +330,9 @@
     <div class="enc-note">
         Шаг 1: частота встречи → тип существа (d8 × террейн, CoZ стр. 11) → конкретное существо (таблицы) →
         данные существа из Appendix I (AC, HD, % в логове, тип сокровища, некомбатанты).
-        Шаг 2: % в логове и численность подставлены автоматически (численность — бросок из диапазона Number Appearing),
-        рефери может изменить → бросок % в логове → если логово найдено, определяются его тип и размеры,
-        иначе логово не определяется → присутствующие (40–60%) → группы вне логова → обнаружение/уклонение
+        Шаг 2: % в логове и численность подставлены автоматически (численность — бросок из диапазона Number Appearing;
+        для ретейнеров — по таблицам лидера, CoZ стр. 158–159), рефери может изменить. Если в книге % в логове не задан
+        (люди), логово не определяется и шаг пропускается → присутствующие (40–60%) → группы вне логова → обнаружение/уклонение
         (число PC × число NPC) → сюрприз и дистанция → пошлина замка (если логово — замок).
         Террейны Mountains/Deserts/Ocean/Cities в CoZ не заданы — это пример по DaD, рефери может изменить.
         Сокровище логова (CoZ, стр. 144–145) генерируется <b>только если логово найдено</b>: монеты, камни, ювелирка/арт,
@@ -948,7 +948,17 @@ const MONSTER_ROSTER = {
     'Rebels': { num: [1, 500], lair: null, ac: null, hd: 1, trsr: null },
     'Angry Mob': { num: [1, 100], lair: null, ac: null, hd: 1, trsr: null },
     'Nomads': { num: [2, 12], lair: null, ac: null, hd: null, trsr: null, note: '2–12 фургонов, по 2–12 человек в каждом' },
-    'Retainers': { num: null, lair: null, ac: null, hd: null, trsr: null, note: 'численность определяется по таблицам лидера (стр. 159)' }
+    'Retainers': { num: null, lair: null, ac: null, hd: null, trsr: null, retainer: true, note: 'численность — по таблицам лидера (CoZ, стр. 158–159)' }
+};
+
+// CoZ стр. 158–159: у ретейнеров численность определяется лидером, а не фиксированным диапазоном.
+const RETAINER_LEADER = { die: 6, entries: ['Lord', 'Superhero', 'Superhero', 'Hero', 'Hero', 'Hero'] };
+const RETAINER_CLASS = { die: 6, entries: ['Fighter', 'Fighter', 'Fighter', 'Cleric', 'Cleric', 'Magic-user'] };
+// men — Number Appearing (Men at Arms); fantastic/companions — как рефери-деталь (без броска).
+const RETAINER_COUNTS = {
+    'Lord': { men: [100, 500], fantastic: [1, 20], companions: '0–9 (1d10−1)' },
+    'Superhero': { men: [1, 100], fantastic: [1, 10], companions: '0–7 (1d8−1)' },
+    'Hero': { men: [1, 10], fantastic: [1, 4], companions: '0–3 (1d4−1)' }
 };
 
 // Диапазон Number Appearing → «чистые» кубики (соглашение проекта); иначе — равномерный бросок
@@ -1361,14 +1371,32 @@ function startEncounter() {
         steps.push(encAdd('Данные существа', 'В сводной таблице CoZ нет строки для «' + creatureName + '» — данные задаёт рефери.'));
     }
 
+    // Ретейнеры (CoZ, стр. 158–159): численность определяется лидером, а не диапазоном Number Appearing.
+    let retainer = null;
+    if (entry && entry.retainer) {
+        const lr = roll(RETAINER_LEADER.die);
+        const leader = RETAINER_LEADER.entries[lr - 1];
+        const cr = roll(RETAINER_CLASS.die);
+        const cls = RETAINER_CLASS.entries[cr - 1];
+        const counts = RETAINER_COUNTS[leader];
+        const men = rollRange(counts.men[0], counts.men[1]);
+        retainer = { leader: leader, leaderRoll: lr, cls: cls, clsRoll: cr, men: men.value, menLabel: men.label, counts: counts };
+        const detail = 'Лидер: d6 = <b>' + lr + '</b> → <b>' + leader + '</b>; класс: d6 = <b>' + cr + '</b> → <b>' + cls + '</b>.<br>'
+            + 'Men at Arms: ' + counts.men[0] + '–' + counts.men[1] + ' → ' + men.label + ' = <b>' + men.value + '</b>.<br>'
+            + '<span class="muted">Fantastic Creatures: ' + counts.fantastic[0] + '–' + counts.fantastic[1]
+            + '; Companions: ' + counts.companions + ' — решает рефери (CoZ, стр. 159).</span>';
+        steps.push(encAdd('Отряд ретейнеров (CoZ, стр. 158–159)', detail));
+    }
+
     // Предзаполняем шаг 2 данными из ростера (рефери может переопределить)
     const pctEl = document.getElementById('encPctLair');
     const numEl = document.getElementById('encNum');
     pctEl.value = (entry && entry.lair != null) ? entry.lair : '';
-    if (entry && entry.num) numEl.value = rollRange(entry.num[0], entry.num[1]).value;
+    if (retainer) numEl.value = retainer.men;
+    else if (entry && entry.num) numEl.value = rollRange(entry.num[0], entry.num[1]).value;
     else numEl.value = '';
 
-    encState = { terrain: terrain, mode: mode, road: road, pc: pc, type: type, creatureName: creatureName, roster: entry, steps1: steps.join('') };
+    encState = { terrain: terrain, mode: mode, road: road, pc: pc, type: type, creatureName: creatureName, roster: entry, retainer: retainer, steps1: steps.join('') };
     out.innerHTML = encState.steps1;
     document.getElementById('encStep2').style.display = '';
 }
@@ -1380,20 +1408,36 @@ function continueEncounter() {
     let numRaw = document.getElementById('encNum').value;
     let numLabel = null;
     if (pctRaw === '' && entry && entry.lair != null) pctRaw = String(entry.lair);
-    if (numRaw === '' && entry && entry.num) { const rr = rollRange(entry.num[0], entry.num[1]); numRaw = String(rr.value); numLabel = rr.label; }
-    if (pctRaw === '' || numRaw === '') {
+    if (numRaw === '' && encState.retainer) { const rr = rollRange(encState.retainer.counts.men[0], encState.retainer.counts.men[1]); numRaw = String(rr.value); numLabel = rr.label; }
+    else if (numRaw === '' && entry && entry.num) { const rr = rollRange(entry.num[0], entry.num[1]); numRaw = String(rr.value); numLabel = rr.label; }
+    // У людей (Bandits/Rebels/Angry Mob/Nomads/Retainers) % в логове книгой не задан — логово не определяется.
+    const lairUndetermined = (pctRaw === '' && entry && entry.lair == null);
+    if ((pctRaw === '' && !lairUndetermined) || numRaw === '') {
         alert('В книге нет данных для этого существа — введите % в логове и численность вручную.');
         return;
     }
-    const pctLair = parseInt(pctRaw);
+    const pctLair = lairUndetermined ? 0 : parseInt(pctRaw);
     const numAppear = parseInt(numRaw);
     const out = document.getElementById('encOutput');
     const steps = [];
 
-    const d100 = roll(100);
-    const found = d100 <= pctLair;
-    steps.push(encAdd('% в логове', pctLair + '% → d100 = <b>' + d100 + '</b> → ' + (found ? '<b>логово найдено</b>' : 'логово не найдено') + '.'));
-    const numInfo = (entry && entry.num) ? ('диапазон ' + entry.num[0] + '–' + entry.num[1] + (numLabel ? ' → ' + numLabel : '')) : 'задано рефери';
+    let found = false;
+    if (lairUndetermined) {
+        steps.push(encAdd('% в логове', 'В книге % в логове не задан (люди) — логово не определяется.'));
+    } else {
+        const d100 = roll(100);
+        found = d100 <= pctLair;
+        steps.push(encAdd('% в логове', pctLair + '% → d100 = <b>' + d100 + '</b> → ' + (found ? '<b>логово найдено</b>' : 'логово не найдено') + '.'));
+    }
+    let numInfo;
+    if (encState.retainer) {
+        const r = encState.retainer;
+        numInfo = r.leader + '/Men at Arms ' + r.counts.men[0] + '–' + r.counts.men[1] + (numLabel ? ' → ' + numLabel : '');
+    } else if (entry && entry.num) {
+        numInfo = 'диапазон ' + entry.num[0] + '–' + entry.num[1] + (numLabel ? ' → ' + numLabel : '');
+    } else {
+        numInfo = 'задано рефери';
+    }
     steps.push(encAdd('Численность', numInfo + ': <b>' + numAppear + '</b>.'));
     if (entry && entry.nc) steps.push(encAdd('Некомбатанты', entry.nc));
 
@@ -1402,6 +1446,8 @@ function continueEncounter() {
         const lair = genLairDetails(encState.type === 'Undead');
         steps.push(encAdd('Логово', lair.html));
         lairName = lair.name;
+    } else if (lairUndetermined) {
+        steps.push(encAdd('Логово', 'Логово не определяется — в книге % в логове не задан.'));
     } else {
         steps.push(encAdd('Логово', 'Логово не найдено — тип логова не определяется.'));
     }

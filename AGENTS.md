@@ -36,6 +36,18 @@ the STEP 3 creatures.
   book for STEP 3 creatures, so the tool leaves them as referee inputs rather
   than inventing values. The "random direction chart" is also absent from the
   book.
+- Retainers (`RETAINER_LEADER`/`RETAINER_CLASS`/`RETAINER_COUNTS`): CoZ pp.158–159
+  gives no fixed Number Appearing — the count comes from the leader (Lord 100–500 /
+  Superhero 1–100 / Hero 1–10 Men at Arms). `startEncounter` rolls leader + class and
+  pre-fills the number; fantastic creatures and companions are shown as a
+  referee note (not rolled). The CoZ source text is external to this repo
+  (see the `ZED/` working folder); do not invent values.
+- Humans (Bandits/Rebels/Angry Mob/Nomads/Retainers) have no `% in lair` in CoZ.
+  When the book value is `null` and the field is left blank, `continueEncounter`
+  treats the lair as undetermined (`found = false`) and skips the lair/treasure
+  steps instead of blocking on manual input; a manually entered value is still
+  honoured. Creatures with no lair at all (`Elemental*`, `Tarn*`, `Unicorn`) get
+  the same treatment.
 - The HTML carries the required "Unofficial unlicensed product…" statement in
   its `<footer>` — preserve it on edits (it is also emitted in the MD export).
 - Non-rulebook presentation features (not in `DaD.md`, don't treat as rules):
