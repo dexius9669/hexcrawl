@@ -303,13 +303,7 @@
                 <option value="manual">Свой вариант (город, океан…)</option>
             </select>
         </label>
-        <label>Режим:
-            <select id="encMode">
-                <option value="direct" selected>Встреча уже произошла</option>
-                <option value="daily">Дневной переход</option>
-            </select>
-        </label>
-        <span id="encDailyWrap" style="display:none;">
+        <span id="encDailyWrap">
             <label>Способ движения:
                 <select id="encMethod">
                     <option value="foot">Пешком (2)</option>
@@ -385,7 +379,7 @@
     </div>
 
     <div class="enc-output" id="encOutput">
-        Выберите местность и режим, затем нажмите «Определить встречу». Для дневного перехода укажите способ движения и проходимость дня; при промахе дневной проверки расчёт завершается без броска по столбцу обитателей.
+        Выберите местность, способ движения и проходимость дня, затем нажмите «Определить встречу». Одна дневная проверка к6 решает, была ли встреча; при промахе расчёт завершается без броска по столбцу обитателей. Для города и открытого океана («Свой вариант») встреча задаётся вручную.
     </div>
     <div class="enc-note">
         Правила встреч и добычи — «Поиски Славы и Удачи» 2.0: приложение II (обитатели и таблицы встреч, с. 38–63),
@@ -2404,9 +2398,8 @@ function enc2SubToggle(on) {
 function enc2DragonNote(field, val) { if (enc2State && enc2State.dragon) enc2State.dragon[field] = val; }
 
 function enc2Run() {
-    const mode = enc2El('encMode').value;
     const col = enc2El('encTerrain').value;
-    enc2State = { mode: mode, col: col, time: null, daily: null, manual: null, retinue: null, wanderers: null, tur: null, result: null };
+    enc2State = { col: col, time: null, daily: null, manual: null, retinue: null, wanderers: null, tur: null, result: null };
     if (col === 'manual') {
         const name = enc2El('encManualName').value.trim();
         if (!name) { alert('Укажите, кто встретился (город, открытый океан или иная местность без столбца).'); return; }
@@ -2415,20 +2408,18 @@ function enc2Run() {
         enc2Finalize();
         return;
     }
-    if (mode === 'daily') {
-        const method = enc2El('encMethod').value;
-        const passId = enc2El('encPass').value;
-        const road = enc2El('encRoad').checked;
-        const pass = PASS2.filter(function (p) { return p.id === passId; })[0];
-        const speed = travelSpeed2(method, passId, road);
-        const r = roll(6);
-        const hit = pass.thr.indexOf(r) >= 0;
-        enc2State.daily = { speed: speed, pass: pass, road: road, roll: r, hit: hit, timeRoll: null };
-        if (!hit) { enc2RenderStep1(); return; }
-        const tr = roll(6);
-        enc2State.daily.timeRoll = tr;
-        enc2State.time = timeOfDay2(tr);
-    }
+    const method = enc2El('encMethod').value;
+    const passId = enc2El('encPass').value;
+    const road = enc2El('encRoad').checked;
+    const pass = PASS2.filter(function (p) { return p.id === passId; })[0];
+    const speed = travelSpeed2(method, passId, road);
+    const r = roll(6);
+    const hit = pass.thr.indexOf(r) >= 0;
+    enc2State.daily = { speed: speed, pass: pass, road: road, roll: r, hit: hit, timeRoll: null };
+    if (!hit) { enc2RenderStep1(); return; }
+    const tr = roll(6);
+    enc2State.daily.timeRoll = tr;
+    enc2State.time = timeOfDay2(tr);
     const a = roll(6), b = roll(6);
     enc2State.d6 = [a, b];
     enc2State.sum = a + b;
@@ -2446,7 +2437,7 @@ function enc2Run() {
 function enc2DragonManual() {
     const species = enc2El('encDragonSpecies').value;
     const heads = parseInt(enc2El('encHeads').value) || 3;
-    enc2State = { mode: 'direct', col: null, time: null, daily: null, manual: null, retinue: null, wanderers: null, tur: null, result: null, heads: heads };
+    enc2State = { col: null, time: null, daily: null, manual: null, retinue: null, wanderers: null, tur: null, result: null, heads: heads };
     const names = { wyrm: 'Дракон (вирм)', great: 'Дракон (великий вирм)', lindwurm: 'Линдвурм', lun: 'Лун', gorynych: 'Змей Горыныч', skola: 'Ско’ла' };
     enc2State.inhabitant = names[species];
     enc2State.cellState = null;
@@ -2832,14 +2823,10 @@ syncRollOcean();
 applyDefaultDensity('map');
 applyDefaultDensity('roll');
 
-function syncEncMode() {
-    document.getElementById('encDailyWrap').style.display = document.getElementById('encMode').value === 'daily' ? '' : 'none';
-}
-document.getElementById('encMode').addEventListener('change', syncEncMode);
-syncEncMode();
-
 function syncEncTerrain() {
-    document.getElementById('encManualWrap').style.display = document.getElementById('encTerrain').value === 'manual' ? '' : 'none';
+    const manual = document.getElementById('encTerrain').value === 'manual';
+    document.getElementById('encManualWrap').style.display = manual ? '' : 'none';
+    document.getElementById('encDailyWrap').style.display = manual ? 'none' : '';
 }
 document.getElementById('encTerrain').addEventListener('change', syncEncTerrain);
 syncEncTerrain();
