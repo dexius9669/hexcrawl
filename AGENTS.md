@@ -44,6 +44,8 @@ Hardcoded JS data tables (names Russian, matching the 2.0 book):
 - `BESTIARY2` — per-article cards: wounds, attacks, morale, habits, number
   rules (`num`), lair text, treasure basis (`tr`). `ENC2_ALIAS` maps cell names
   to articles/variants. `THREAT2` — general threat table (p. 27) fallback.
+  `RANGE2_DICE` — author's clean-dice map for article ranges; `d3_2`,
+  `rollDiceExpr2`, `fmtRoll2` — dice helpers (d3 = ceil(d6/2)).
 - `HUMAN2`, `RETINUE2_CALLING`, `RETINUE2_SCALE` — human parties (pp. 57–59).
 - `DRAGON2_AGES` and friends — dragon generation (pp. 39–40); `genDragon2` is
   the single calculation shared by table hits and the manual "Создать дракона"
@@ -54,7 +56,8 @@ Hardcoded JS data tables (names Russian, matching the 2.0 book):
   `BUYERS2`.
 
 Flow: `enc2Run` → `resolveCell2` → `inhabitantInfo2` → `enc2Finalize`
-(`numPrefill2`) → `enc2Continue` (`leaders2`, treasure basis, `ledger2`).
+(`numPrefill2`, immediate "Численность" step) → `enc2Continue` (`leaders2`,
+treasure basis, `ledger2`).
 Pure calculation functions (`parseCache2`, `cacheCoins2`, `rollCache2`,
 `rollGem2`, `rollThing2`, `rollDragonHoard2`, `skolaHoard2`, `humanMoney2`,
 `humanMagic2`, `saleBronze2`, `ledger2`, `genDragon2`, `travelSpeed2`) are kept
@@ -65,10 +68,26 @@ separate from rendering so they can be tested with forced dice.
 - The merged cell "Побережье / Реки и озёра, 7" must stay identical in both
   columns; an empty river result is a bug.
 - Single-face d6 ranges are written `[n, n]`, not `[n]`.
-- Number ranges the book gives without dice are **referee inputs** — do not
-  reintroduce `RANGE_DICE`-style automation. The threat table (p. 27) is the
-  fallback only when an article is silent; the separate "2d6 sum → threat"
-  table on p. 27 is a **dungeon** template, not wilderness.
+- Encounter count is computed and shown **immediately** by "Определить
+  встречу" (a "Численность" step with source and dice faces); the step-2 field
+  remains for referee correction (marked; leaders and treasure use the
+  corrected value). Two outcomes: (1) the article states a number explicitly
+  (fixed, article dice, or an article range) → take it from the article;
+  (2) no explicit number → the threat table (p. 27), wilderness column, by the
+  article's wounds. Narrative-singular prose is NOT an explicit number:
+  crocodile, gorgon, leshy, minotaur, cyclops, anakim, djinn, baku, etc. use the
+  threat table. Keep 1 only for explicit solitary clauses ("бродит один",
+  "встречаются поодиночке", …); hydra 1, ghoul 1 outside lair / 20–120 in lair,
+  nereid 1, spring nymphs d3, cargo mule threat. Conditional outcomes (trau
+  1/2/3, dwarf scout/escort, svartalf ambush 4 per traveller) stay referee
+  choice/input. Human parties are unchanged (choice by situation / retinue
+  scale). The separate "2d6 sum → threat" table on p. 27 is a **dungeon**
+  template, not wilderness.
+- Author-mandated clean dice for ranges (`RANGE2_DICE`): 20–400 = 2d20×10,
+  10–200 = 1d20×10, 10–60 = d6×10, 3–30 = 3d10, 2–20 = 2d10, 2–12 = 2d6,
+  1–20 = d20, 1–10 = d10, 1–6 = d6, 1–4 = d4; d3 = ceil(d6/2) everywhere
+  (`d3_2()`), including the thing-table row and dragon-hoard gems. Show the
+  faces (`rollDiceExpr2` / `fmtRoll2`).
 - Dragons: one age roll (2d6) drives wounds, attacks, cone and hoard multiplier
   (×1/×3/×6). Sko'la has fixed stats and a fixed hoard; Gorynych's head count is
   a referee input; lun/lindwurm follow their article clauses. Never roll a
