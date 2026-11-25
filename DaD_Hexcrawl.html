@@ -111,6 +111,10 @@
     .enc-label { font-weight: bold; color: #7aa2cc; margin-bottom: 4px; }
     .enc-val .muted { color: #8892a2; }
     .enc-note { color: #7a8494; font-size: 12px; margin-top: 12px; }
+    .enc-cache { margin: 6px 0; border: 1px solid #2a2f3a; border-radius: 6px; padding: 6px 10px; background: #171a21; }
+    .enc-cache summary { cursor: pointer; color: #9aa4b4; font-weight: bold; }
+    .enc-cache > div { margin-top: 6px; }
+    .enc-cache .enc-cache { margin-left: 12px; }
     .step2-box {
         background: #1b1e26;
         border: 1px solid #3a404d;
@@ -160,7 +164,7 @@
 <body>
 <header>
     <h1>Генератор гекскроула</h1>
-    <div class="sub">По материалам «Dragons at Dawn: Supplement I — Twilight» (2011) и «Champions of ZED: Zero Edition Dungeoneering» (Daniel Hugh Boggs, 2015). Масштаб гекса — 5 миль. Базовые таблицы — по CoZ.</div>
+    <div class="sub">Карта и поселения — по «Dragons at Dawn: Supplement I — Twilight» (2011) и «Champions of ZED: Zero Edition Dungeoneering» (Daniel Hugh Boggs, 2015), масштаб гекса — 5 миль. Путешествие, встречи и добыча — по книге «Поиски Славы и Удачи» 2.0 (приложения II и IV).</div>
 </header>
 
 <nav class="tabs">
@@ -283,62 +287,118 @@
 
 <section id="encounterTab" class="tab" style="display:none;">
     <div class="controls">
-        <label>Террейн:
+        <label>Местность:
             <select id="encTerrain">
-                <option>Open Land</option>
-                <option>Forest</option>
-                <option>Lakes and Rivers</option>
-                <option>Swamps</option>
-                <option>Mountains</option>
-                <option>Deserts</option>
-                <option>Ocean</option>
-                <option>Cities</option>
+                <option value="forest">Лес</option>
+                <option value="woodedHills">Лесистые холмы</option>
+                <option value="thickets">Чащоба</option>
+                <option value="jungle">Джунгли</option>
+                <option value="hills">Холмы</option>
+                <option value="mountains">Горы</option>
+                <option value="open" selected>Открытая местность</option>
+                <option value="desert">Пустыня</option>
+                <option value="coast">Побережье</option>
+                <option value="rivers">Реки и озёра</option>
+                <option value="swamp">Болото</option>
+                <option value="manual">Свой вариант (город, океан…)</option>
             </select>
         </label>
         <label>Режим:
             <select id="encMode">
-                <option value="travel">В пути</option>
-                <option value="rest">На привале</option>
+                <option value="direct" selected>Встреча уже произошла</option>
+                <option value="daily">Дневной переход</option>
             </select>
         </label>
-        <span id="encFreqWrap">
-            <label>Частота (в пути):
-                <select id="encFreq">
-                    <option value="temp">Temperate / Tropical / Sub Tropical — 1–3 на гекс</option>
-                    <option value="arid">Arid / Sub Arctic / Ocean / Flying — каждый 6-й гекс</option>
-                    <option value="arctic">Arctic — 1 из 10</option>
+        <span id="encDailyWrap" style="display:none;">
+            <label>Способ движения:
+                <select id="encMethod">
+                    <option value="foot">Пешком (2)</option>
+                    <option value="cart">Телега / повозка (3)</option>
+                    <option value="horse">Верхом (4)</option>
+                    <option value="boatDown">Лодка по течению (4)</option>
+                    <option value="boatUp">Лодка против течения (2)</option>
                 </select>
             </label>
+            <label>Проходимость дня:
+                <select id="encPass">
+                    <option value="open">Открытая — 1/6</option>
+                    <option value="broken">Пересечённая — 1/3</option>
+                    <option value="difficult">Труднопроходимая — 1/2</option>
+                </select>
+            </label>
+            <label><input type="checkbox" id="encRoad"> По дороге (снимает замедление)</label>
         </span>
-        <label><input type="checkbox" id="encRoad"> Путь по дороге</label>
-        <label><input type="checkbox" id="encWaterLair"> Логово A — водное (A: Water)</label>
-        <label><input type="checkbox" id="encIndividual" checked> Личная мелочь у существ</label>
-        <label>Число PC: <input type="number" id="encPC" min="1" max="999" value="4"></label>
-        <button class="action" id="encButton">Бросить встречу (шаг 1)</button>
+        <span id="encManualWrap" style="display:none;">
+            <label>Кто встретился: <input type="text" id="encManualName" style="width:220px;" placeholder="местная встреча Рефери"></label>
+        </span>
+        <button class="action" id="encButton">Определить встречу</button>
+    </div>
+    <div class="controls">
+        <label>Создать дракона:
+            <select id="encDragonSpecies">
+                <option value="wyrm">Вирм</option>
+                <option value="great">Великий вирм</option>
+                <option value="lindwurm">Линдвурм</option>
+                <option value="lun">Лун</option>
+                <option value="gorynych">Змей Горыныч</option>
+                <option value="skola">Ско’ла</option>
+            </select>
+        </label>
+        <span id="encHeadsWrap" style="display:none;">
+            <label>Голов у Горыныча: <input type="number" id="encHeads" min="1" max="12" value="3"></label>
+        </span>
+        <button class="action" id="encDragonButton">Создать дракона</button>
+        <span style="color:#7a8494;font-size:12px;">Тот же расчёт, что при выпадении дракона в таблице; вид выбирает Рефери.</span>
     </div>
 
     <div class="step2-box" id="encStep2" style="display:none;">
-        <p><b>Шаг 2.</b> Значения подставлены из таблицы CoZ (Appendix I); можно переопределить вручную. У существ без данных в книге (люди) логово не определяется, а численность ретейнеров генерируется по таблицам лидера (CoZ, стр. 158–159).</p>
-        <label>% в логове: <input type="number" id="encPctLair" min="0" max="100"></label>
-        <label>Численность: <input type="number" id="encNum" min="1" max="9999"></label>
-        <button class="action" id="encContinue">Продолжить (шаг 2)</button>
+        <p><b>Шаг 2.</b> Численность подставлена из статьи или броска; диапазон без костей и выбор по обстановке задаёт Рефери. Логово и добыча — по статье обитателя и приложению IV; когда бросок на клад не назначен, добычу определяет Рефери.</p>
+        <label>Численность: <input type="number" id="encNum" min="0" max="9999"></label>
+        <span id="encRetinuePanel" style="display:inline-flex;gap:14px;flex-wrap:wrap;"></span>
+        <label>Добыча:
+            <select id="encTreasureBasis"></select>
+        </label>
+        <span id="encCacheCountWrap" style="display:none;">
+            <label>Тайников: <input type="number" id="encCacheCount" min="1" max="10" value="1"></label>
+        </span>
+        <span id="encHumanPanel" style="display:none;">
+            <label>Доход:
+                <select id="encIncomeMode">
+                    <option value="roll">Неизвестен (2к6)</option>
+                    <option value="known">Известен</option>
+                </select>
+            </label>
+            <span id="encIncomeKnownWrap" style="display:none;">
+                <label><input type="number" id="encIncomeKnown" min="1" style="width:80px;"> сер./мес.</label>
+            </span>
+            <label>Обстановка:
+                <select id="encMoneyCtx">
+                    <option value="journey">При себе, дальняя дорога (2к6 дневных)</option>
+                    <option value="local">При себе, по местным делам (к6 дневных)</option>
+                    <option value="home">Дома (к6 месячных)</option>
+                    <option value="both">Дома и при себе (дорожные деньги вычитаются)</option>
+                </select>
+            </label>
+        </span>
+        <span id="encArtPanel" style="display:none;flex-basis:100%;"></span>
+        <button class="action" id="encContinue">Определить логово и добычу</button>
     </div>
 
     <div class="enc-output" id="encOutput">
-        Выберите террейн и режим, затем нажмите «Бросить встречу (шаг 1)».
+        Выберите местность и режим, затем нажмите «Определить встречу». Для дневного перехода укажите способ движения и проходимость дня; при промахе дневной проверки расчёт завершается без броска по столбцу обитателей.
     </div>
     <div class="enc-note">
-        Шаг 1: частота встречи → тип существа (d8 × террейн, CoZ стр. 11) → конкретное существо (таблицы) →
-        данные существа из Appendix I (AC, HD, % в логове, тип сокровища, некомбатанты).
-        Шаг 2: % в логове и численность подставлены автоматически (численность — бросок из диапазона Number Appearing;
-        для ретейнеров — по таблицам лидера, CoZ стр. 158–159), рефери может изменить. Если в книге % в логове не задан
-        (люди), логово не определяется и шаг пропускается → присутствующие (40–60%) → группы вне логова → обнаружение/уклонение
-        (число PC × число NPC) → сюрприз и дистанция → пошлина замка (если логово — замок).
-        Террейны Mountains/Deserts/Ocean/Cities в CoZ не заданы — это пример по DaD, рефери может изменить.
-        Сокровище логова (CoZ, стр. 144–145) генерируется <b>только если логово найдено</b>: монеты, камни, ювелирка/арт,
-        призовые предметы — категорией (детализация позже). Личная мелочь у существ — по стр. 144.
+        Правила встреч и добычи — «Поиски Славы и Удачи» 2.0: приложение II (обитатели и таблицы встреч, с. 38–63),
+        приложение IV (сокровища, с. 118–124), «Исследование Дикой Местности» (с. 35–36), таблица угрозы (с. 27).
+        Карта и поселения генерируются по ZED/DaD. Один дневной к6 решает, была ли встреча (открытая — 6, пересечённая — 5–6,
+        труднопроходимая — 4–6); второй бросок 2к6 по столбцу местности определяет обитателя. Соответствие готового гекса столбцу:
+        возвышенность с лесом и холмами — «Лесистые холмы», болото — «Болото», высокие пики — «Горы»; обычный лес и чащоба различаются
+        густотой, каньон и открытая вода требуют выбора Рефери. Проходимость и условия маршрута указываются вручную.
+        Сокровища: обычный тайник (два к6 — столбец и строка, шестёрка = 0 только для монет), возрастной клад дракона (×1/×3/×6),
+        описанный клад статьи и имущество человека; итоговая ведомость и продажа — в целой бронзе.
     </div>
 </section>
+
 
 <section id="travelTab" class="tab" style="display:none;">
     <div class="panel" style="margin-bottom:16px;">
@@ -877,645 +937,1699 @@ document.getElementById('exportMd').addEventListener('click', function () {
     URL.revokeObjectURL(a.href);
 });
 
-/* ================= ENCOUNTER GENERATOR ================= */
-
-const CREATURE_TYPE = {
-    // CoZ, стр. 11 — четыре террейна, заданные автором
-    'Open Land': ['Humanoid', 'Human', 'Humanoid', 'Lycanthropes', 'Non-humanoid', 'Human', 'Non-humanoid', 'Dragon'],
-    'Forest': ['Human', 'Non-humanoid', 'Humanoid', 'Lycanthropes', 'Lycanthropes', 'Human', 'Non-humanoid', 'Dragon'],
-    'Lakes and Rivers': ['Human', 'Non-humanoid', 'Humanoid', 'Lycanthropes', 'Non-humanoid', 'Non-humanoid', 'Non-humanoid', 'Dragon'],
-    'Swamps': ['Human', 'Non-humanoid', 'Humanoid', 'Lycanthropes', 'Non-humanoid', 'Undead', 'Undead', 'Dragon'],
-    // Террейны, не заданные в CoZ: пример по DaD (Fantastic/Normal сведены в Non-humanoid); рефери может изменить
-    'Mountains': ['Human', 'Non-humanoid', 'Humanoid', 'Lycanthropes', 'Non-humanoid', 'Humanoid', 'Dragon', 'Dragon'],
-    'Deserts': ['Human', 'Non-humanoid', 'Humanoid', 'Human', 'Non-humanoid', 'Dragon', '-', '-'],
-    'Ocean': ['Human', 'Non-humanoid', 'Humanoid', 'Undead', 'Non-humanoid', '-', '-', '-'],
-    'Cities': ['Human', 'Undead', 'Undead', 'Human', '-', '-', '-', '-']
-};
-
-const CREATURE_TABLES = {
-    'Humanoid': { die: 10, entries: ['Dwarves', 'Elves', 'Giants', 'Goblins', 'Hobbits', 'Hobgoblins', 'Kobolds', 'Ogres', 'Orcs, Giant', 'Orcs, tribal'] },
-    'Non-humanoid': { die: 20, entries: ['Balarauk', 'Basilisks', 'Centaurs', 'Cockatrices', 'Elemental, Air', 'Elemental, Earth', 'Elemental, Fire', 'Elemental, Water', 'Giant Eagle', 'Giant Wolves', 'Treant', 'Roc', 'Tarn, Cargo', 'Tarn, War', 'Thoat, Light', 'Thoat, Heavy', 'Troll', 'True Troll', 'Unicorn', 'Wargs'] },
-    'Humans': { die: 8, entries: ['Bandits', 'Bandits', 'Rebels', 'Retainers', 'Retainers', 'Retainers', 'Angry Mob', 'Nomads'] },
-    'Lycanthropes': { die: 6, entries: ['Werewolves', 'Werewolves', 'Werebears', 'Werebears', 'Werelions/tigers', 'Werelions/tigers'] },
-    'Undead': { die: 6, entries: ['Ghouls', 'Skeletons', 'Wights', 'Wraiths', 'Vampire', 'Zombies'] }
-};
-
-// CoZ, Appendix I «On Monsters & Men», сводная таблица, стр. 161–162.
-// num:[min,max] — Number Appearing; lair — % in Lair; ac/hd — класс брони и кости хитов; trsr — тип сокровища; nc — некомбатанты.
-const MONSTER_ROSTER = {
-    'Balarauk': { num: [1, 6], lair: 33, ac: 2, hd: 10, trsr: 'F' },
-    'Basilisks': { num: [1, 6], lair: 84, ac: 4, hd: '6+1', trsr: 'G' },
-    'Centaurs': { num: [2, 20], lair: 5, ac: 5, hd: 4, trsr: 'A', nc: 'в логове самки превосходят самцов 2:1; молодняк — примерно столько же, сколько самцов' },
-    'Cockatrices': { num: [1, 8], lair: 35, ac: 6, hd: 5, trsr: 'D' },
-    'Dragon': { num: [1, 4], lair: 60, ac: 2, hd: '1-12', trsr: 'H', note: '% в логове = шанс, что дракон заговорит (стр. 158)' },
-    'Dwarves': { num: [4, 400], lair: 50, ac: 4, hd: 1, trsr: 'G' },
-    'Elemental, Air': { num: [1, 1], lair: null, ac: 2, hd: 8, trsr: '-' },
-    'Elemental, Earth': { num: [1, 1], lair: null, ac: 2, hd: 8, trsr: '-' },
-    'Elemental, Fire': { num: [1, 1], lair: null, ac: 2, hd: 8, trsr: '-' },
-    'Elemental, Water': { num: [1, 1], lair: null, ac: 2, hd: 8, trsr: '-' },
-    'Elves': { num: [30, 300], lair: 25, ac: 4, hd: '1+1', trsr: 'E' },
-    'Ghouls': { num: [1, 200], lair: 65, ac: 6, hd: 3, trsr: 'E' },
-    'Giants': { num: [1, 8], lair: 40, ac: 4, hd: '8-12', trsr: 'E' },
-    'Giant Eagle': { num: [2, 200], lair: 5, ac: 4, hd: 12, trsr: 'O' },
-    'Giant Wolves': { num: [3, 12], lair: 10, ac: 6, hd: '3+3', trsr: '-' },
-    'Goblins': { num: [30, 300], lair: 40, ac: 6, hd: '½', trsr: 'C', nc: '+60% женщины-некомбатанты и +5–10% детей' },
-    'Hobbits': { num: [30, 300], lair: 70, ac: 9, hd: 1, trsr: 'B' },
-    'Hobgoblins': { num: [10, 100], lair: 40, ac: 5, hd: '1+1', trsr: 'D', nc: '+5–10% детей' },
-    'Kobolds': { num: [30, 300], lair: 40, ac: 7, hd: '½', trsr: 'C' },
-    'Ogres': { num: [2, 20], lair: 30, ac: 5, hd: '4+1', trsr: 'B' },
-    'Orcs, Giant': { num: [30, 300], lair: 50, ac: 6, hd: 1, trsr: 'D', nc: '+70% женщины и +10–15% детей' },
-    'Orcs, tribal': { num: [30, 300], lair: 50, ac: 6, hd: '½', trsr: 'C', nc: '+70% женщины и +10–15% детей' },
-    'Roc': { num: [1, 20], lair: 16, ac: 4, hd: '3+1', trsr: 'I' },
-    'Tarn, Cargo': { num: [1, 20], lair: null, ac: 3, hd: 5, trsr: '-' },
-    'Tarn, Racing': { num: [1, 100], lair: null, ac: 4, hd: 2, trsr: '-' },
-    'Tarn, War': { num: [1, 300], lair: null, ac: 3, hd: 8, trsr: '-' },
-    'Thoat, Heavy': { num: [1, 10], lair: null, ac: 7, hd: 8, trsr: '-' },
-    'Thoat, Light': { num: [6, 30], lair: null, ac: 7, hd: 5, trsr: '-' },
-    'Treant': { num: [2, 20], lair: 100, ac: 2, hd: 8, trsr: '-' },
-    'Troll': { num: [2, 16], lair: 16, ac: 4, hd: 5, trsr: 'D', note: '+20% шанс 1d6 пленников' },
-    'True Troll': { num: [1, 1], lair: 60, ac: 4, hd: 12, trsr: 'G' },
-    'Unicorn': { num: [1, 4], lair: null, ac: 2, hd: 4, trsr: '-' },
-    'Wargs': { num: [2, 8], lair: 10, ac: '4+4', hd: 1, trsr: 'I' },
-    'Wights': { num: [2, 24], lair: 80, ac: 5, hd: 3, trsr: 'E' },
-    'Wraiths': { num: [2, 16], lair: 20, ac: 3, hd: 4, trsr: 'E' },
-    'Zombies': { num: [3, 30], lair: 20, ac: 8, hd: 1, trsr: 'I' },
-    // Ликантропы: в сводной таблице CoZ есть базовая строка «Lycanthrope» и «Lycanthrope WereBear» (AC/HD — см. описание)
-    'Werewolves': { num: [2, 20], lair: 15, ac: '*', hd: '*', trsr: 'C' },
-    'Werebears': { num: [1, 1], lair: 15, ac: '*', hd: '*', trsr: 'C' },
-    'Werelions/tigers': { num: [2, 20], lair: 15, ac: '*', hd: '*', trsr: 'C' },
-    // Люди (стр. 158–160): % в логове и тип сокровища книгой не заданы
-    'Bandits': { num: [1, 500], lair: null, ac: null, hd: 1, trsr: null },
-    'Rebels': { num: [1, 500], lair: null, ac: null, hd: 1, trsr: null },
-    'Angry Mob': { num: [1, 100], lair: null, ac: null, hd: 1, trsr: null },
-    'Nomads': { num: [2, 12], lair: null, ac: null, hd: null, trsr: null, note: '2–12 фургонов, по 2–12 человек в каждом' },
-    'Retainers': { num: null, lair: null, ac: null, hd: null, trsr: null, retainer: true, note: 'численность — по таблицам лидера (CoZ, стр. 158–159)' }
-};
-
-// CoZ стр. 158–159: у ретейнеров численность определяется лидером, а не фиксированным диапазоном.
-const RETAINER_LEADER = { die: 6, entries: ['Lord', 'Superhero', 'Superhero', 'Hero', 'Hero', 'Hero'] };
-const RETAINER_CLASS = { die: 6, entries: ['Fighter', 'Fighter', 'Fighter', 'Cleric', 'Cleric', 'Magic-user'] };
-// men — Number Appearing (Men at Arms); fantastic/companions — как рефери-деталь (без броска).
-const RETAINER_COUNTS = {
-    'Lord': { men: [100, 500], fantastic: [1, 20], companions: '0–9 (1d10−1)' },
-    'Superhero': { men: [1, 100], fantastic: [1, 10], companions: '0–7 (1d8−1)' },
-    'Hero': { men: [1, 10], fantastic: [1, 4], companions: '0–3 (1d4−1)' }
-};
-
-// Диапазон Number Appearing → «чистые» кубики (соглашение проекта); иначе — равномерный бросок
-const RANGE_DICE = {
-    '1-4': '1d4', '1-6': '1d6', '1-8': '1d8', '1-10': '1d10', '1-20': '1d20', '1-100': '1d100',
-    '1-200': '2d100', '1-300': '3d100', '1-500': '5d100',
-    '2-8': '2d4', '2-12': '2d6', '2-16': '2d8', '2-20': '2d10', '2-24': '2d12', '2-200': '2d100',
-    '3-12': '3d4', '3-30': '3d10',
-    '4-40': '4d10', '4-400': '4d100',
-    '10-100': '1d10×10', '30-300': '3d10×10'
-};
-
-function rollRange(min, max, log) {
-    const expr = RANGE_DICE[min + '-' + max];
-    let v, label;
-    const m = expr && expr.match(/^(\d+)d(\d+)(?:×(\d+))?$/);
-    if (m) {
-        label = expr;
-        v = rollSum(parseInt(m[1]), parseInt(m[2])) * (m[3] ? parseInt(m[3]) : 1);
-        if (v < min) v = min;
-        if (v > max) v = max;
-    } else {
-        v = min + Math.floor(Math.random() * (max - min + 1));
-        label = 'равномерно ' + min + '–' + max;
-    }
-    if (log) log.push({ k: 'num', label: label, v: v });
-    return { value: v, label: label };
-}
-
-function rosterOf(name) { return MONSTER_ROSTER[name] || null; }
-
-function rosterHtml(entry) {
-    if (!entry) return '';
-    const rows = [];
-    rows.push('AC <b>' + (entry.ac != null ? entry.ac : '—') + '</b>');
-    rows.push('HD <b>' + (entry.hd != null ? entry.hd : '—') + '</b>');
-    rows.push('% в логове <b>' + (entry.lair != null ? entry.lair + '%' : '—') + '</b>');
-    rows.push('Сокровище <b>' + (entry.trsr || '—') + '</b>');
-    let html = rows.join(' &middot; ');
-    if (entry.nc) html += '<br><span class="muted">Некомбатанты: ' + entry.nc + '</span>';
-    if (entry.note) html += '<br><span class="muted">' + entry.note + '</span>';
-    return html;
-}
-
-/* ================= TREASURE (CoZ, Part IX, стр. 144–145) ================= */
-// Кубики записаны как [кол-во, грань, множитель]. null = сокровища этого вида нет.
-
-const TREASURE_TYPES = {
-    'A: Water': {
-        copper: null, silver: null,
-        gold: { p: 75, d: [1, 6, 100] },
-        electrum: { p: 80, d: [5, 4, 10] },
-        art: { p: 75, d: [1, 6, 10] },
-        gems: { p: 75, d: [1, 6, 10] },
-        prize: [
-            { p: 50, kind: 'map' },
-            { p: 75, kind: 'items', count: 3, filter: 'nonweapon' },
-            { p: 95, kind: 'captives', d: [1, 10, 1] }
-        ]
-    },
-    'A: Land': {
-        copper: null,
-        silver: { p: 40, d: [1, 6, 1000] },
-        gold: { p: 25, d: [2, 6, 100] },
-        electrum: { p: 40, d: [1, 6, 1000] },
-        art: { p: 25, d: [6, 6, 1] },
-        gems: { p: 65, d: [6, 6, 1] },
-        prize: [
-            { p: 50, kind: 'items', count: 3 },
-            { p: 95, kind: 'captives', d: [1, 20, 1] }
-        ]
-    },
-    'B': {
-        copper: { p: 50, d: [1, 6, 1000] },
-        silver: { p: 25, d: [1, 6, 100] },
-        gold: { p: 25, d: [1, 6, 10] },
-        electrum: { p: 50, d: [4, 8, 1] },
-        art: null,
-        gems: { p: 25, d: [1, 6, 1] },
-        prize: [{ p: 10, kind: 'items', count: 1, filter: 'weaponarmor' }]
-    },
-    'C': {
-        copper: { p: 5, d: [1, 10, 1000] },
-        silver: { p: 50, d: [1, 12, 1000] },
-        gold: { p: 25, d: [1, 8, 100] },
-        electrum: { p: 40, d: [2, 6, 10] },
-        art: { p: 10, d: [1, 4, 1] },
-        gems: { p: 10, d: [1, 4, 1] },
-        prize: [{ p: 15, kind: 'items', count: 2 }]
-    },
-    'D': {
-        copper: { p: 5, d: [1, 8, 1000] },
-        silver: { p: 10, d: [1, 12, 1000] },
-        gold: { p: 60, d: [1, 6, 1000] },
-        electrum: null,
-        art: { p: 25, d: [1, 6, 1] },
-        gems: { p: 25, d: [1, 6, 1] },
-        prize: [{ p: 25, kind: 'items', count: 3 }]
-    },
-    'E': {
-        copper: null,
-        silver: { p: 10, d: [1, 12, 1000] },
-        gold: { p: 25, d: [1, 8, 1000] },
-        electrum: { p: 50, d: [1, 8, 100] },
-        art: { p: 10, d: [1, 8, 1] },
-        gems: { p: 10, d: [1, 8, 1] },
-        prize: [{ p: 50, kind: 'items', countDice: [1, 4, 1] }]
-    },
-    'F': {
-        copper: null, silver: null,
-        gold: { p: 50, d: [1, 12, 1000] },
-        electrum: { p: 20, d: [1, 6, 1000] },
-        art: { p: 10, d: [1, 8, 1] },
-        gems: { p: 25, d: [1, 12, 1] },
-        prize: [{ p: 50, kind: 'items', countDice: [1, 5, 1], filter: 'nonweapon' }]
-    },
-    'G': {
-        copper: null, silver: null, gold: null, electrum: null,
-        art: { p: 15, d: [1, 8, 1] },
-        gems: { p: 25, d: [1, 12, 1] },
-        prize: [{ p: 50, kind: 'items', countDice: [1, 3, 1] }]
-    },
-    'H': {
-        copper: { p: 25, d: [2, 12, 1000] },
-        silver: { p: 50, d: [1, 10, 1000] },
-        gold: { p: 75, d: [1, 6, 10000] },
-        electrum: { p: 75, d: [1, 8, 1000] },
-        art: { p: 50, d: [6, 6, 1] },
-        gems: { p: 50, d: [1, 6, 10] },
-        prize: [{ p: 25, kind: 'items', countDice: [1, 6, 1] }]
-    },
-    'I': {
-        copper: null, silver: null, gold: null, electrum: null,
-        art: { p: 30, d: [2, 8, 1] },
-        gems: { p: 50, d: [2, 8, 1] },
-        prize: [{ p: 30, kind: 'items', count: 1 }]
-    }
-};
-
-// Типы ювелирных изделий и предметов искусства (CoZ, стр. 145), d% 1–100
-const JEWELRY_TYPES = [
-    [1, 6, 'Anklet'], [7, 12, 'Belt'], [13, 14, 'Bowl'], [15, 21, 'Bracelet'],
-    [22, 27, 'Brooch'], [28, 32, 'Buckle'], [33, 37, 'Chain'], [38, 40, 'Choker'],
-    [41, 42, 'Circlet'], [43, 47, 'Clasp'], [48, 51, 'Comb'], [52, 52, 'Crown'],
-    [53, 55, 'Cup'], [56, 62, 'Earring'], [63, 65, 'Flagon'], [66, 68, 'Goblet'],
-    [69, 73, 'Knife'], [74, 77, 'Locket'], [78, 80, 'Medal'], [81, 82, 'Necklace'],
-    [83, 89, 'Painting'], [90, 90, 'Plate'], [91, 95, 'Pin'], [96, 96, 'Sceptre'],
-    [97, 99, 'Statue'], [100, 100, 'Tiara']
-];
-
-// Категории призовых предметов (CoZ, стр. 145), d%
-const PRIZE_ITEM_TYPE = [
-    [1, 12, 'Magical Armour', 'armour'],
-    [13, 32, 'Magical Swords', 'swords'],
-    [33, 44, 'Magical Weapons', 'weapons'],
-    [45, 57, 'Maps and Manuscripts', 'maps'],
-    [58, 64, 'Miscellaneous Magic', 'misc'],
-    [65, 79, 'Potions', 'potions'],
-    [80, 82, 'Rings, Amulets, Medallions', 'rings'],
-    [83, 95, 'Scrolls and Spellbooks', 'scrolls'],
-    [96, 100, 'Wands and Staves', 'wands']
-];
-
-function rollDice(d) { return rollSum(d[0], d[1]) * (d[2] || 1); }
-function diceLabel(d) { return d[0] + 'd' + d[1] + (d[2] > 1 ? '×' + fmtNum(d[2]) : ''); }
-
-function rangePick(list) {
-    const r = roll(100);
-    for (let i = 0; i < list.length; i++) { if (r >= list[i][0] && r <= list[i][1]) return list[i]; }
-    return list[list.length - 1];
-}
-
-// CoZ, стр. 145: базис d6 (1=1000, 2=500, 3–6=100) + коррекция по 2d6
-function gemValue() {
-    const b = roll(6);
-    const base = b === 1 ? 1000 : (b === 2 ? 500 : 100);
-    const a = rollSum(2, 6);
-    let f;
-    if (a === 2) f = -0.9;
-    else if (a <= 4) f = -0.5;
-    else if (a <= 9) f = 1;
-    else if (a === 10) f = 1.5;
-    else if (a === 11) f = 2;
-    else f = roll(4) + roll(6);
-    return Math.max(1, Math.round(base * f));
-}
-
-// CoZ, стр. 145: база d6 (1–3=100, 4–6=1000); для 100 — 3d6×100, для 1000 — 1d6×1000
-function jewelryValue() {
-    return roll(6) <= 3 ? rollSum(3, 6) * 100 : rollSum(1, 6) * 1000;
-}
-
-function prizeEntry(filter) {
-    for (let i = 0; i < 300; i++) {
-        const e = rangePick(PRIZE_ITEM_TYPE);
-        if (!filter) return e;
-        if (filter === 'nonweapon' && ['maps', 'misc', 'potions', 'rings', 'scrolls', 'wands'].indexOf(e[3]) >= 0) return e;
-        if (filter === 'weaponarmor' && ['armour', 'swords', 'weapons'].indexOf(e[3]) >= 0) return e;
-    }
-    return PRIZE_ITEM_TYPE[5];
-}
-
-// Генерация сокровища логова. Возвращает { html, total, has }.
-function genTreasureHtml(key) {
-    const t = TREASURE_TYPES[key];
-    if (!t) return { html: '<span class="muted">Тип «' + key + '» в таблице CoZ (A–I) не описан — решает рефери.</span>', total: null, has: null };
-    const parts = [];
-    let totalGp = 0;
-
-    const coinDefs = [['copper', 'медь (cp)', 0.01], ['silver', 'серебро (sp)', 0.1], ['gold', 'золото (gp)', 1], ['electrum', 'электрум (ep)', 0.5]];
-    const coins = [];
-    coinDefs.forEach(function (cd) {
-        const c = t[cd[0]];
-        if (!c) return;
-        if (roll(100) <= c.p) { const v = rollDice(c.d); totalGp += v * cd[2]; coins.push(fmtNum(v) + ' ' + cd[1]); }
-    });
-    parts.push('Монеты: ' + (coins.length ? '<b>' + coins.join(', ') + '</b>' : 'нет'));
-
-    const gems = [];
-    if (t.gems && roll(100) <= t.gems.p) {
-        const n = rollDice(t.gems.d);
-        for (let i = 0; i < n; i++) gems.push(gemValue());
-        totalGp += gems.reduce(function (a, b) { return a + b; }, 0);
-        parts.push('Камни: <b>' + n + '</b> — ' + gems.map(fmtNum).join(', ') + ' GP');
-    } else parts.push('Камни: нет');
-
-    const arts = [];
-    if (t.art && roll(100) <= t.art.p) {
-        const n = rollDice(t.art.d);
-        for (let i = 0; i < n; i++) { const ty = rangePick(JEWELRY_TYPES)[2]; const val = jewelryValue(); arts.push(ty + ' (' + fmtNum(val) + ' GP)'); totalGp += val; }
-        parts.push('Ювелирка/арт: <b>' + n + '</b> — ' + arts.join('; '));
-    } else parts.push('Ювелирка/арт: нет');
-
-    const items = {};
-    let maps = 0, captives = 0, itemTries = 0;
-    (t.prize || []).forEach(function (rule) {
-        if (rule.kind === 'items') {
-            const tries = rule.count || rollDice(rule.countDice);
-            for (let i = 0; i < tries; i++) {
-                itemTries++;
-                if (roll(100) <= rule.p) { const e = prizeEntry(rule.filter); items[e[2]] = (items[e[2]] || 0) + 1; }
-            }
-        } else if (rule.kind === 'map') {
-            if (roll(100) <= rule.p) maps++;
-        } else if (rule.kind === 'captives') {
-            if (roll(100) <= rule.p) captives = rollDice(rule.d);
-        }
-    });
-    const itemList = Object.keys(items).map(function (k) { return k + ' ×' + items[k]; });
-    parts.push('Призовые предметы (категории): ' + (itemList.length ? '<b>' + itemList.join(', ') + '</b> <span class="muted">(детализация предметов — следующая итерация)</span>' : 'нет'));
-    if (maps) parts.push('Карта(ы): <b>' + maps + '</b> <span class="muted">(детали — CoZ стр. 150)</span>');
-    if (captives) parts.push('Пленники: <b>' + captives + '</b>');
-
-    const has = coins.length || gems.length || arts.length || itemList.length || maps || captives;
-    parts.push('<span class="muted">Оценка монет/камней/ювелирки: ~' + fmtNum(Math.round(totalGp)) + ' GP (без призовых предметов).</span>');
-    return { html: parts.join('<br>'), total: totalGp, has: !!has };
-}
-
-const LAIR_TYPES = {
-    1: { name: 'Industrial/Commercial Buildings', roll: function () { return 'строений: ' + rollSum(2, 6) + ', комнат в каждом: ' + roll(6) + ', проходов: ' + roll(12) + ', подземных уровней: ' + roll(2); } },
-    2: { name: 'Temple', roll: function () { return 'комнат: ' + rollSum(2, 12) + ', этажей: ' + roll(3) + ', подземных проходов: ' + roll(6) + ', подземных уровней: ' + roll(4); } },
-    3: { name: 'Cave', roll: function () { return 'проходов: ' + rollSum(3, 10) + ', уровней: ' + roll(4); } },
-    4: { name: 'Castle (ранее неизвестный)', roll: function () { return 'комнат: ' + rollSum(4, 6) + ', башен: ' + roll(6) + ', этажей: ' + roll(6) + ', подземных проходов: ' + rollSum(2, 6) + ', подземных уровней: ' + roll(4); } },
-    5: { name: 'Farm', roll: function () { return 'построек: ' + roll(6) + ', комнат в каждой: ' + roll(6) + ', этажей: ' + roll(4) + ', подземных проходов: ' + (roll(4) - 1) + ', уровней: 1'; } },
-    6: { name: "Magic-user's Tower", roll: function () { return 'комнат: ' + rollSum(3, 6) + ', этажей: ' + (roll(6) + 1) + ', подземных проходов: ' + rollSum(3, 10) + ', подземных уровней: ' + (roll(4) - 1); } }
-};
-
-const RESTING = {
-    'Open Land': [6],
-    'Forest': [5, 6],
-    'Lakes and Rivers': [5, 6],
-    'Swamps': [4, 5, 6],
-    'Mountains': [4, 5, 6],
-    'Deserts': [5, 6],
-    'Ocean': [6],
-    'Cities': [6]
-};
-
-const DISCOVERY = {
-    '1-3': { '30+': [50, 50], '16-30': [30, 70], '1-15': [10, 90] },
-    '4-9': { '30+': [70, 30], '16-30': [50, 50], '1-15': [30, 70] },
-    '10-24': { '30+': [90, 10], '16-30': [70, 30], '1-15': [50, 50] },
-    '25+': { '30+': [95, 5], '16-30': [85, 15], '1-15': [75, 25] }
-};
-
-let encState = null;
-
-function pcRange(n) { return n <= 3 ? '1-3' : (n <= 9 ? '4-9' : (n <= 24 ? '10-24' : '25+')); }
-function npcRange(n) { return n >= 30 ? '30+' : (n >= 16 ? '16-30' : '1-15'); }
-
-function terrainMod(t) {
-    if (t === 'Forest') { const r = 10 + roll(16) - 1; return { disc: -r, evad: r, note: 'Лес: −10…−25% к обнаружению, +10…+25% к уклонению (+10% уклонения даже при сюрпризе).' }; }
-    if (t === 'Mountains') return { disc: -20, evad: 20, note: 'Горы: −20% к обнаружению, +20% к уклонению.' };
-    if (t === 'Swamps' || t === 'Cities') return { disc: -5, evad: 5, note: 'Болота/города: −5% к обнаружению, +5% к уклонению.' };
-    return { disc: 0, evad: 0, note: '' };
-}
-
-function splitGroups(total) {
-    if (total <= 0) return [0];
-    const groups = [total];
-    for (let i = 0; i < 50; i++) {
-        if (roll(6) <= 4) break;
-        groups.sort(function (a, b) { return b - a; });
-        const g = groups[0];
-        if (g < 2) break;
-        const a = Math.floor(g / 2);
-        const b = g - a;
-        groups.splice(0, 1, a, b);
-    }
-    groups.sort(function (a, b) { return b - a; });
-    return groups;
-}
-
-function genLairDetails(isUndead) {
-    const r = roll(8);
-    let name, detail;
-    if (r <= 6) {
-        name = LAIR_TYPES[r].name;
-        detail = LAIR_TYPES[r].roll();
-    } else if (r === 7 && isUndead) {
-        name = 'Burial Ground';
-        detail = 'могил: ' + roll(100) + ', проходов: ' + roll(12) + ', уровней: ' + roll(3);
-    } else {
-        const c = roll(6);
-        const count = c <= 2 ? 2 : (c <= 4 ? 3 : 4);
-        const pool = [1, 2, 3, 4, 5, 6].sort(function () { return Math.random() - 0.5; }).slice(0, count);
-        name = 'Комбинация (' + count + ')';
-        detail = 'Сочетание ' + count + ' типов (d6 = ' + c + '):<br>' + pool.map(function (i) { return '<b>' + LAIR_TYPES[i].name + '</b>: ' + LAIR_TYPES[i].roll(); }).join('<br>');
-    }
-    return { name: name, html: '<b>' + name + '</b><br><span class="muted">' + detail + '</span>' };
-}
-
 function setText(arr) {
     if (arr.length === 1) return String(arr[0]);
     const a = arr.slice().sort(function (x, y) { return x - y; });
     return a[0] + '–' + a[a.length - 1];
 }
 
-function surpriseStep() {
-    const p = roll(6);
-    let html = 'PC: d6 = <b>' + p + '</b> → ' + (p <= 2 ? (p === 1 ? 'застигнуты на 1 раунд' : 'застигнуты на 2 раунда') : 'не застигнуты');
-    if (p > 2) {
-        const n = roll(6);
-        html += '<br>NPC: d6 = <b>' + n + '</b> → ' + (n <= 2 ? (n === 1 ? 'застигнуты на 1 раунд' : 'застигнуты на 2 раунда') : 'не застигнуты');
-    }
-    const sd = rollSum(2, 4) * 10;
-    const sds = roll(4) * 10;
-    html += '<br>Дистанция обнаружения: <b>' + sd + '</b> ярдов (2d4×10, без сюрприза) / <b>' + sds + '</b> ярдов (1d4×10, при сюрпризе).';
-    return html;
-}
-
 function encAdd(label, html) {
     return '<div class="enc-step"><div class="enc-label">' + label + '</div><div class="enc-val">' + html + '</div></div>';
 }
 
-function startEncounter() {
-    const terrain = document.getElementById('encTerrain').value;
-    const mode = document.getElementById('encMode').value;
-    const freq = document.getElementById('encFreq').value;
-    const road = document.getElementById('encRoad').checked;
-    const pc = parseInt(document.getElementById('encPC').value) || 0;
+/* ================= ENCOUNTER GENERATOR 2.0 ================= */
+// Правила путешествия, встреч и добычи — «Поиски Славы и Удачи» 2.0:
+// приложение II (обитатели, с. 38–63), приложение IV (сокровища, с. 118–124),
+// «Исследование Дикой Местности» (с. 35–36), таблица угрозы (с. 27).
+// Карта и поселения по-прежнему генерируются по ZED/DaD.
 
-    const out = document.getElementById('encOutput');
-    const steps = [];
+const ENC2_COLS = [
+    { id: 'forest', name: 'Лес' },
+    { id: 'woodedHills', name: 'Лесистые холмы' },
+    { id: 'thickets', name: 'Чащоба' },
+    { id: 'jungle', name: 'Джунгли' },
+    { id: 'hills', name: 'Холмы' },
+    { id: 'mountains', name: 'Горы' },
+    { id: 'open', name: 'Открытая местность' },
+    { id: 'desert', name: 'Пустыня' },
+    { id: 'coast', name: 'Побережье' },
+    { id: 'rivers', name: 'Реки и озёра' },
+    { id: 'swamp', name: 'Болото' }
+];
 
-    let ok = true;
-    if (mode === 'travel') {
-        if (freq === 'temp') { const n = roll(3); steps.push(encAdd('Частота встречи (в пути)', '1–3 встречи на 5-мильный гекс → d3 = <b>' + n + '</b> встреч(и).')); }
-        else if (freq === 'arid') { const r = roll(6); ok = r === 6; steps.push(encAdd('Частота встречи (в пути)', 'Каждый 6-й гекс (1 из 6). Бросок d6 = <b>' + r + '</b> → ' + (ok ? '<b>встреча</b>' : 'нет встречи') + '.')); }
-        else { const r = roll(10); ok = r === 1; steps.push(encAdd('Частота встречи (в пути)', '1 из 10. Бросок d10 = <b>' + r + '</b> → ' + (ok ? '<b>встреча</b>' : 'нет встречи') + '.')); }
-    } else {
-        const r = roll(6);
-        const set = RESTING[terrain];
-        ok = set.indexOf(r) >= 0;
-        steps.push(encAdd('Частота встречи (на привале)', terrain + ': встреча при ' + setText(set) + '. Бросок d6 = <b>' + r + '</b> → ' + (ok ? '<b>встреча</b>' : 'нет встречи') + '.'));
+// Приложение II, с. 60–63. Суммы 2–12, веса 1,2,3,4,5,6,5,4,3,2,1 из 36.
+// t: one — одно существо; pair — к6 (1–3 первый, 4–6 второй); d6 — указанные диапазоны;
+// cond — выбор по обстановке; time — день/ночь; sub — замена при условии (к6 4–6).
+const ENC2_TABLES = {
+    forest: {
+        2: { t: 'pair', a: 'Единорог', b: 'Жар-птица' },
+        3: { t: 'pair', a: 'Гамадриада', b: 'Дриада' },
+        4: { t: 'pair', a: 'Тролль', b: 'Минотавр' },
+        5: { t: 'd6', o: [{ r: [1, 3], c: 'Человек (охотник или лесоруб)', choice: ['Охотник', 'Лесоруб'] }, { r: [4, 5], c: 'Разбойники' }, { r: [6, 6], c: 'Повстанцы' }] },
+        6: { t: 'one', c: 'Кабан' },
+        7: { t: 'pair', a: 'Волк', b: 'Олень' },
+        8: { t: 'one', c: 'Медведь' },
+        9: { t: 'pair', a: 'Фейри', b: 'Эльф' },
+        10: { t: 'pair', a: 'Кентавр', b: 'Багбир' },
+        11: { t: 'pair', a: 'Керинейская лань', b: 'Леший' },
+        12: { t: 'one', c: 'Дракон (великий вирм)' }
+    },
+    woodedHills: {
+        2: { t: 'one', c: 'Анаким' },
+        3: { t: 'pair', a: 'Трау', b: 'Тролль' },
+        4: { t: 'pair', a: 'Химера', b: 'Леукрокотта' },
+        5: { t: 'pair', a: 'Грифон', b: 'Гиппогриф' },
+        6: { t: 'd6', o: [{ r: [1, 3], c: 'Человек (дозорный)' }, { r: [4, 5], c: 'Разбойники' }, { r: [6, 6], c: 'Повстанцы' }] },
+        7: { t: 'pair', a: 'Кабан', b: 'Олень' },
+        8: { t: 'pair', a: 'Медведь', b: 'Волк' },
+        9: { t: 'pair', a: 'Огр', b: 'Багбир' },
+        10: { t: 'pair', a: 'Тэнгу', b: 'Редкап' },
+        11: { t: 'one', c: 'Дракон (вирм)' },
+        12: { t: 'one', c: 'Дракон (великий вирм)' }
+    },
+    thickets: {
+        2: { t: 'one', c: 'Змей Горыныч' },
+        3: { t: 'pair', a: 'Гамадриада', b: 'Леший' },
+        4: { t: 'pair', a: 'Дриада', b: 'Сирин' },
+        5: { t: 'pair', a: 'Сатир', b: 'Кентавр' },
+        6: { t: 'pair', a: 'Багбир', b: 'Эльф' },
+        7: { t: 'pair', a: 'Кабан', b: 'Олень' },
+        8: { t: 'pair', a: 'Медведь', b: 'Волк' },
+        9: { t: 'pair', a: 'Тэнгу', b: 'Фейри' },
+        10: { t: 'pair', a: 'Тролль', b: 'Минотавр' },
+        11: { t: 'sub', c: 'Ликантроп (медведь)', cond: 'На лесной тропе', sub: 'Повстанцы' },
+        12: { t: 'one', c: 'Гидра' }
+    },
+    jungle: {
+        2: { t: 'one', c: 'Гидра' },
+        3: { t: 'pair', a: 'Джинн', b: 'Баку' },
+        4: { t: 'one', c: 'Нага' },
+        5: { t: 'pair', a: 'Тигр', b: 'Леукрокотта' },
+        6: { t: 'pair', a: 'Питон', b: 'Крокодил' },
+        7: { t: 'one', c: 'Обезьяна' },
+        8: { t: 'd6', o: [{ r: [1, 3], c: 'Кабан' }, { r: [4, 5], c: 'Человек (охотник)' }, { r: [6, 6], c: 'Повстанцы' }] },
+        9: { t: 'pair', a: 'Тигбануа', b: 'Тунда' },
+        10: { t: 'one', c: 'Ракшас' },
+        11: { t: 'one', c: 'Стихийный дух земли' },
+        12: { t: 'one', c: 'Дракон (великий вирм)' }
+    },
+    hills: {
+        2: { t: 'one', c: 'Анаким' },
+        3: { t: 'one', c: 'Стихийный дух земли' },
+        4: { t: 'pair', a: 'Химера', b: 'Мардяхор' },
+        5: { t: 'pair', a: 'Огр', b: 'Редкап' },
+        6: { t: 'one', c: 'Гиппогриф' },
+        7: { t: 'pair', a: 'Лошадь', b: 'Овца' },
+        8: { t: 'd6', o: [{ r: [1, 3], c: 'Волк' }, { r: [4, 5], c: 'Человек (пастух)' }, { r: [6, 6], c: 'Разбойники' }] },
+        9: { t: 'pair', a: 'Кабан', b: 'Тур' },
+        10: { t: 'one', c: 'Грифон' },
+        11: { t: 'one', c: 'Дракон (вирм)' },
+        12: { t: 'one', c: 'Дракон (великий вирм)' }
+    },
+    mountains: {
+        2: { t: 'one', c: 'Дракон (великий вирм)' },
+        3: { t: 'one', c: 'Трау' },
+        4: { t: 'pair', a: 'Рух', b: 'Химера' },
+        5: { t: 'pair', a: 'Тролль', b: 'Минотавр' },
+        6: { t: 'pair', a: 'Грифон', b: 'Гиппогриф' },
+        7: { t: 'd6', o: [{ r: [1, 3], c: 'Дварф' }, { r: [4, 5], c: 'Человек (погонщик)' }, { r: [6, 6], c: 'Свита', note: 'на пути через перевал' }] },
+        8: { t: 'pair', a: 'Коза', b: 'Медведь' },
+        9: { t: 'pair', a: 'Огр', b: 'Нимфа (ореада)' },
+        10: { t: 'pair', a: 'Циклоп', b: 'Сфинкс' },
+        11: { t: 'one', c: 'Дракон (вирм)' },
+        12: { t: 'one', c: 'Анаким' }
+    },
+    open: {
+        2: { t: 'pair', a: 'Пегас', b: 'Единорог' },
+        3: { t: 'one', c: 'Дракон (вирм)' },
+        4: { t: 'pair', a: 'Немейский лев', b: 'Хэтэ' },
+        5: { t: 'pair', a: 'Лев', b: 'Волк' },
+        6: { t: 'pair', a: 'Олень', b: 'Тур' },
+        7: { t: 'd6', o: [{ r: [1, 2], c: 'Человек', choice: ['Пастух', 'Купец', 'Дозорный'] }, { r: [3, 3], c: 'Скитальцы' }, { r: [4, 4], c: 'Разбойники' }, { r: [5, 5], c: 'Налётчики' }, { r: [6, 6], c: 'Свита' }] },
+        8: { t: 'pair', a: 'Тур', b: 'Овца' },
+        9: { t: 'one', c: 'Лошадь' },
+        10: { t: 'pair', a: 'Грифон', b: 'Эльф' },
+        11: { t: 'pair', a: 'Стихийный дух воздуха', b: 'Сирин' },
+        12: { t: 'one', c: 'Дракон (великий вирм)' }
+    },
+    desert: {
+        2: { t: 'one', c: 'Стихийный дух огня' },
+        3: { t: 'one', c: 'Ифрит' },
+        4: { t: 'one', c: 'Василиск' },
+        5: { t: 'one', c: 'Сфинкс' },
+        6: { t: 'd6', o: [{ r: [1, 3], c: 'Человек (проводник)' }, { r: [4, 5], c: 'Купеческий караван' }, { r: [6, 6], c: 'Налётчики' }] },
+        7: { t: 'one', c: 'Верблюд' },
+        8: { t: 'one', c: 'Мул с поклажей' },
+        9: { t: 'one', c: 'Джинн' },
+        10: { t: 'pair', a: 'Рух', b: 'Мардяхор' },
+        11: { t: 'one', c: 'Гуль' },
+        12: { t: 'cond', o: [{ label: 'У водоёма', c: 'Гидра' }, { label: 'Вдали от воды', c: 'Горгона' }] }
+    },
+    coast: {
+        2: { t: 'pair', a: 'Морской змей', b: 'Аспидохелон' },
+        3: { t: 'one', c: 'Трау' },
+        4: { t: 'one', c: 'Циклоп' },
+        5: { t: 'pair', a: 'Нимфа (нереида)', b: 'Селки' },
+        6: { t: 'pair', a: 'Гиппокамп', b: 'Нингё' },
+        7: { t: 'd6', o: [{ r: [1, 3], c: 'Рыбаки' }, { r: [4, 5], c: 'Человек (перевозчик)' }, { r: [6, 6], c: 'Морские разбойники' }] },
+        8: { t: 'one', c: 'Грифон', note: 'над берегом' },
+        9: { t: 'pair', a: 'Волк', b: 'Овца' },
+        10: { t: 'one', c: 'Рух' },
+        11: { t: 'one', c: 'Стихийный дух воды' },
+        12: { t: 'one', c: 'Морской змей (исполинский)' }
+    },
+    rivers: {
+        2: { t: 'one', c: 'Гидра' },
+        3: { t: 'cond', o: [{ label: 'На реке', c: 'Нимфа (наяда)' }, { label: 'На озере', c: 'Стимфалийская птица' }] },
+        4: { t: 'pair', a: 'Нага', b: 'Асрай' },
+        5: { t: 'pair', a: 'Медведь', b: 'Олень' },
+        6: { t: 'pair', a: 'Кабан', b: 'Крокодил' },
+        7: { t: 'd6', o: [{ r: [1, 3], c: 'Рыбаки' }, { r: [4, 5], c: 'Человек (перевозчик)' }, { r: [6, 6], c: 'Морские разбойники' }] },
+        8: { t: 'one', c: 'Гадюка' },
+        9: { t: 'pair', a: 'Каппа', b: 'Келпи' },
+        10: { t: 'pair', a: 'Питон', b: 'Ал' },
+        11: { t: 'one', c: 'Стихийный дух воды' },
+        12: { t: 'one', c: 'Дракон (великий вирм)' }
+    },
+    swamp: {
+        2: { t: 'one', c: 'Гидра' },
+        3: { t: 'pair', a: 'Джинн', b: 'Асрай' },
+        4: { t: 'pair', a: 'Ал', b: 'Нага' },
+        5: { t: 'one', c: 'Стимфалийская птица' },
+        6: { t: 'time', day: 'Фейри', night: 'Гоблин' },
+        7: { t: 'pair', a: 'Гадюка', b: 'Крокодил' },
+        8: { t: 'pair', a: 'Питон', b: 'Кабан' },
+        9: { t: 'sub', c: 'Блуждающий огонёк', cond: 'У гати', sub: 'Разбойники' },
+        10: { t: 'pair', a: 'Нага', b: 'Келпи' },
+        11: { t: 'one', c: 'Стихийный дух воды' },
+        12: { t: 'one', c: 'Дракон (великий вирм)' }
     }
+};
 
-    if (!ok) {
-        steps.push(encAdd('Итог', 'Встреча не происходит. Нажмите «Бросить встречу (шаг 1)» ещё раз.'));
-        out.innerHTML = steps.join('');
-        document.getElementById('encStep2').style.display = 'none';
-        encState = null;
-        return;
-    }
+// Местные замены при подготовке гекса (приложение II, с. 63) — выбор Рефери, не бросок.
+const ENC2_LOCAL_NOTES = 'При подготовке гекса можно заменить один вариант в ячейке местным обитателем: у горного вулкана на 3 вместо Трау — Черуфе; у входа в рудник под землёй — чёрный эльф; в горах близ пещеры Ско’лы на 2 — сам Ско’ла. В взбудораженном поселении вместо отдельных людей может собраться разъярённая толпа; пастух на открытой местности может искать подменыша; в деревне — Басахаун за работой, Домовой за оставленным угощением, Айтварас с добычей; две недели от зимнего солнцестояния по ночам — Калликанцарос.';
 
-    let type = '-', dr = 0, attempts = 0;
-    do {
-        dr = roll(8);
-        type = CREATURE_TYPE[terrain][dr - 1];
-        attempts++;
-        if (type === '-' && attempts > 20) type = 'Humanoid';
-    } while (type === '-');
-    steps.push(encAdd('Тип существа', 'd8 = <b>' + dr + '</b> → <b>' + type + '</b>' + (attempts > 1 ? ' (переброс «—» ×' + (attempts - 1) + ')' : '') + '.'));
-
-    let creatureName = type;
-    if (type === 'Dragon') {
-        steps.push(encAdd('Существо', '<b>Dragon</b> — отдельной таблицы драконов в книге нет; конкретный вид определяет рефери.'));
-    } else {
-        const tableKey = type === 'Human' ? 'Humans' : type;
-        const table = CREATURE_TABLES[tableKey];
-        const cr = roll(table.die);
-        creatureName = table.entries[cr - 1];
-        steps.push(encAdd('Существо', type + ': d' + table.die + ' = <b>' + cr + '</b> → <b>' + creatureName + '</b>.'));
-    }
-
-    const entry = rosterOf(creatureName);
-    if (entry) {
-        steps.push(encAdd('Данные существа (CoZ, Appendix I)', rosterHtml(entry)));
-    } else {
-        steps.push(encAdd('Данные существа', 'В сводной таблице CoZ нет строки для «' + creatureName + '» — данные задаёт рефери.'));
-    }
-
-    // Ретейнеры (CoZ, стр. 158–159): численность определяется лидером, а не диапазоном Number Appearing.
-    let retainer = null;
-    if (entry && entry.retainer) {
-        const lr = roll(RETAINER_LEADER.die);
-        const leader = RETAINER_LEADER.entries[lr - 1];
-        const cr = roll(RETAINER_CLASS.die);
-        const cls = RETAINER_CLASS.entries[cr - 1];
-        const counts = RETAINER_COUNTS[leader];
-        const men = rollRange(counts.men[0], counts.men[1]);
-        retainer = { leader: leader, leaderRoll: lr, cls: cls, clsRoll: cr, men: men.value, menLabel: men.label, counts: counts };
-        const detail = 'Лидер: d6 = <b>' + lr + '</b> → <b>' + leader + '</b>; класс: d6 = <b>' + cr + '</b> → <b>' + cls + '</b>.<br>'
-            + 'Men at Arms: ' + counts.men[0] + '–' + counts.men[1] + ' → ' + men.label + ' = <b>' + men.value + '</b>.<br>'
-            + '<span class="muted">Fantastic Creatures: ' + counts.fantastic[0] + '–' + counts.fantastic[1]
-            + '; Companions: ' + counts.companions + ' — решает рефери (CoZ, стр. 159).</span>';
-        steps.push(encAdd('Отряд ретейнеров (CoZ, стр. 158–159)', detail));
-    }
-
-    // Предзаполняем шаг 2 данными из ростера (рефери может переопределить)
-    const pctEl = document.getElementById('encPctLair');
-    const numEl = document.getElementById('encNum');
-    pctEl.value = (entry && entry.lair != null) ? entry.lair : '';
-    if (retainer) numEl.value = retainer.men;
-    else if (entry && entry.num) numEl.value = rollRange(entry.num[0], entry.num[1]).value;
-    else numEl.value = '';
-
-    encState = { terrain: terrain, mode: mode, road: road, pc: pc, type: type, creatureName: creatureName, roster: entry, retainer: retainer, steps1: steps.join('') };
-    out.innerHTML = encState.steps1;
-    document.getElementById('encStep2').style.display = '';
+// Общая таблица угрозы (с. 27), размер группы в Дикой Местности.
+// Применяется, когда статья не задаёт численность. Диапазоны без костей — ввод Рефери.
+const THREAT2 = [
+    { max: 2, label: '20–400', kind: 'range', min: 20, max: 400 },
+    { max: 4, label: '10–200', kind: 'range', min: 10, max: 200 },
+    { max: 6, label: '2к6', kind: 'dice', n: 2, d: 6 },
+    { max: 8, label: 'к6', kind: 'dice', n: 1, d: 6 },
+    { max: 11, label: 'к6', kind: 'dice', n: 1, d: 6 },
+    { max: 14, label: '1', kind: 'fix', v: 1 }
+];
+function threatTier(woundsMax) {
+    for (let i = 0; i < THREAT2.length; i++) if (woundsMax <= THREAT2[i].max) return THREAT2[i];
+    return THREAT2[THREAT2.length - 1];
 }
 
-function continueEncounter() {
-    if (!encState) return;
-    const entry = encState.roster;
-    let pctRaw = document.getElementById('encPctLair').value;
-    let numRaw = document.getElementById('encNum').value;
-    let numLabel = null;
-    if (pctRaw === '' && entry && entry.lair != null) pctRaw = String(entry.lair);
-    if (numRaw === '' && encState.retainer) { const rr = rollRange(encState.retainer.counts.men[0], encState.retainer.counts.men[1]); numRaw = String(rr.value); numLabel = rr.label; }
-    else if (numRaw === '' && entry && entry.num) { const rr = rollRange(entry.num[0], entry.num[1]); numRaw = String(rr.value); numLabel = rr.label; }
-    // У людей (Bandits/Rebels/Angry Mob/Nomads/Retainers) % в логове книгой не задан — логово не определяется.
-    const lairUndetermined = (pctRaw === '' && entry && entry.lair == null);
-    if ((pctRaw === '' && !lairUndetermined) || numRaw === '') {
-        alert('В книге нет данных для этого существа — введите % в логове и численность вручную.');
+// Бестиарий приложения II. w — ранения, a — атаки за раунд, m — Мораль,
+// h — повадки и особые условия, num — численность, lair — логово, tr — добыча.
+// num: fix — ровно столько; range — диапазон без костей (ввод Рефери); dice — кости из статьи;
+// d6map — к6 по статье; threat — общая таблица угрозы; manual — по обстановке.
+const BESTIARY2 = {
+    'Анаким': { w: '9–11', a: '3 (оружие великана)', m: '+1', wt: 11,
+        h: 'Сын демона и смертной женщины. Выше трау, умён, жаден до золота; на трау и троллей нападает сразу. Сам куёт доспехи и оружие из любого металла, кроме железа (жжёт руки). У анакима-колдуна клинок и доспех могут быть зачарованными. В замке могут оказаться пленницы.',
+        num: { k: 'fix', v: 1, extra: 'вне замка сопровождают к3 грифона' },
+        lair: 'Замок: 2к6 грифонов, входы охраняет к6 постоянных чар.',
+        tr: { k: 'anakim' } },
+    'Аспидохелон': { w: '12–14', a: '4', m: 'не проверяет', wt: 14,
+        h: 'На панцире старого аспидохелона вырастает лес и селится зверьё — команда может высадиться на «остров». Плывёт неспешно, по суше едва ползёт. Тяжесть проламывает борт корабля или стену. Убить можно магией или осадным оружием.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Ал': { w: '3–4', a: '1 (большие ножницы)', m: '0', wt: 4,
+        h: 'Волосы как змеи, латунные пальцы, железные зубы. Живёт на болоте, в лесу, заходит в поселения; кормится мертвечиной, охотится за детьми. Приблизившийся на 3 м делает спасбросок от болезни (один раз за встречу): провал — смерть через к6 дней без исцеления, частичный успех — слабость −1 на к6 раундов.',
+        num: { k: 'range', min: 1, max: 6, note: 'поодиночке и группами до шести' }, lair: null, tr: { k: 'none', note: 'сокровища алов не интересуют' } },
+    'Асрай': { w: '1–2 (одновременные)', a: '—', m: 'не проверяет', wt: 2,
+        h: 'Маленький водяной дух в облике женщины или ребёнка. Пойманный предложит малое чудо в обмен на свободу; торг вести в тени. На солнце остаётся лужица. Не сражается; ранить можно магией или особым средством.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Айтварас': { w: '1–2', a: '1 (клюв)', m: '−2', wt: 2,
+        h: 'Домашний дух: петух на насесте и огненный сноп в небе. За яйцо и сыр каждый день приносит хозяину еду и монеты на к6 золотых, изредка украшение или самоцвет (крадёт в других домах). Чужой айтварас тянет у путника до 20 монет, изредка самоцвет — спасбросок позволяет заметить кражу; раненый бросает добычу. Без хозяина привязывается к человеку с наибольшей Внешностью; без дома уйдёт через к6 дней.',
+        num: { k: 'fix', v: 1 }, lair: 'Двор хозяина.', tr: { k: 'note', note: 'краденое: до 20 монет, изредка самоцвет' } },
+    'Багбир': { w: '3–4', a: '2 (когти или дубина)', m: '−1', wt: 4,
+        h: 'Гоблин-медведь ростом с человека, космат и силён. Ест только мясо, охотно выслеживает человеческих детей. На немногих нападает сразу; за большим отрядом крадётся до ночлега или ждёт отставшего. Железо и магический жгучий свет вредят ему, как гоблину.',
+        num: { k: 'range', min: 1, max: 10, note: 'отдельно встречаются 1–10' },
+        lair: 'На 1–2 (к6) есть в гоблинском отряде — по одному на каждый полный десяток; в логове гоблинов не меньше пятнадцати.',
+        tr: { k: 'referee' } },
+    'Баку': { w: '9–11 (одновременные)', a: '—', m: 'не проверяет', wt: 11,
+        h: 'Тигр со слоновьей головой, пожирает кошмары. Быстро бегает и летает, при нападении обращается в дым. Владеет магией, изгоняет Нечисть как опытный Служитель; заклинания на самого баку не действуют. Ранить можно магическим оружием или особым средством.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Басахаун': { w: '7–8', a: '2 (кулаки или валуны)', m: 'не проверяет', wt: 8,
+        h: 'Косматый великан, в деревне узнают по запаху. Где с ним обходятся почтительно — помогает в поле и кузнице, в беде защищает жителей. Умеет зачаровывать вещи; брошенный валун бьёт с силой катапульты. Обычное оружие не берёт.',
+        num: { k: 'fix', v: 1 }, lair: 'Деревня.', tr: { k: 'none' } },
+    'Блуждающий огонёк': { w: '3–4 (одновременные)', a: '—', m: '−2', wt: 4,
+        h: 'Одинокий свет там, где кончается твёрдая земля. К6: на 5–6 покажет безопасный путь или ответит на один вопрос («да»/«нет»), оказав услугу — гаснет; на 1–4 ведёт в топь (спасбросок: успех — замер на к6 ходов, провал — идёт за светом; у края трясины второй спасбросок — провал: тонет). Вьючные животные остаются на месте. Бесплотен; достать можно магией; чары рассеиваются в первые четыре хода.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Василиск': { w: '3–4', a: '1 (прикосновение)', m: 'не проверяет', wt: 4,
+        h: 'Из петушиного яйца, высиденного змеёй. Тело змеиное, голова, крылья и лапы птичьи; самец — кокатрис. В пустыне бродит поодиночке; след — полоса увядшей травы или дорожка каменного крошева. Дыхание крошит за ход четверть кубометра камня на 3 м. При попадании жертва делает спасбросок: провал — смерть от прикосновения. Нельзя приручить, зачаровать или отогнать страхом.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Верблюд': { w: '3–4', a: '1 (укус или удар ногой)', m: '−1', wt: 4,
+        h: 'Несёт вьюки по пустыне, может неделю обходиться без воды.',
+        num: { k: 'threat' }, lair: null, tr: { k: 'note', note: 'вьюки — по обстановке' } },
+    'Волк': { w: '1–2', a: '1 (укус)', m: '−1', wt: 2,
+        h: 'Стая долго идёт по следу. На человека решаются напасть, если очень голодны или защищают волчат; мимо сытой стаи можно пройти, оставив дорогу для отступления.',
+        num: { k: 'range', min: 2, max: 20, note: 'стая' }, lair: null,
+        tr: { k: 'note', note: 'шкура стоит 1–10 бронзовых монет' } },
+    'Гадюка': { w: '1', a: '1 (укус)', m: 'не проверяет, уползает', wt: 2,
+        h: 'На болоте или у воды — до десяти гадюк. Если оставлен путь к отступлению — уползёт. Наступившему или сунувшему руку в укрытие кусает в первом раунде без броска; то же при нападении из засады. Спасбросок от яда с +2: провал — слабость и ещё одно ранение, частичный успех — слабость на к6 ходов (−1 к физическим действиям).',
+        num: { k: 'range', min: 1, max: 10, note: 'до десяти' }, lair: null, tr: { k: 'none' } },
+    'Гамадриада': { w: '— (жизнь заключена в дубе)', a: '—', m: 'не проверяет', wt: 0,
+        h: 'В роще растут к6 дубов гамадриад. Нимфа живёт, пока жив её дуб; уведённая от дерева умирает через час. С 18 м может позвать приглянувшегося человека в дуб — каждый зов требует спасброска; провал: кора смыкается, через к6 недель выйдет сам, но навсегда −2 к максимуму ранений. Устоявшего эта гамадриада больше не заманит. Сжечь дуб — пленник свободен, гамадриада гибнет, лесные звери нападают на поджигателей.',
+        num: { k: 'dice', n: 1, d: 6, note: 'к6 дубов в роще' }, lair: 'Роща.', tr: { k: 'none' } },
+    'Гидра': { w: '3 за обычную голову, 6 за центральную (одновременные)', a: '1 за голову (укус)', m: 'не проверяет', wt: 6,
+        h: 'Девять голов на длинных шеях; нападает, когда путники подходят к логову на 30 м. Бить по телу бесполезно даже магией. Укусив, обдаёт ядовитым дыханием (спасбросок от яда: провал — смерть, частичный — ещё одно ранение). Отсечь голову — нанести все её ранения за раунд; на месте отсечённой в следующем раунде вырастают две; помешает прижигание огнём (спасбросок того, кто рубил, огонь у самой раны). Центральная голова бессмертна: отсечённую надо закопать, иначе за 30 дней вырастет новая гидра; старое тело погибнет через 1–10 дней. В каждой смертной голове десять зубов, пригодных для посева (дети гидры).',
+        num: { k: 'fix', v: 1, note: 'девять голов' }, lair: 'Логово; нападает при приближении на 30 м.', tr: { k: 'referee' } },
+    'Гиппогриф': { w: '3–4', a: '2 (передние когти или копыта)', m: '0', wt: 4,
+        h: 'Потомок грифона и кобылицы: орлиные клюв, крылья и передние лапы, лошадиный круп и задние ноги. Питается мясом. Выученный может нести всадника по воздуху.',
+        num: { k: 'dice', n: 1, d: 6, note: 'к6 в лесу, горах и на равнине' }, lair: 'Гнездо; сокровищ в гнезде нет.', tr: { k: 'none' } },
+    'Гиппокамп': { w: '1–2', a: '2 (передние копыта)', m: '0', wt: 2,
+        h: 'Лошадиные головы и гривы, под водой вместо задних ног рыбий хвост. Быстро плавает, дышит в воде и на воздухе, по земле едва ползёт.',
+        num: { k: 'range', min: 2, max: 20, note: 'морской табун' }, lair: null, tr: { k: 'none' } },
+    'Гоблин': { w: '1–2', a: '1 (по оружию)', m: '−1', wt: 2,
+        h: 'Видят в темноте, избегают солнца; железо жжёт руки. Ночью выходят из укрытий в лесах, горах и болотах, днём держатся под землёй. Доспех есть у части отряда; над головами порой видны плечи багбиров.',
+        num: { k: 'threat' }, lair: 'Подземелье; в логове не меньше пятнадцати багбиров при отряде.', tr: { k: 'referee' } },
+    'Горгона': { w: '5–6', a: '2 (аспиды, оружие)', m: '−1', wt: 6,
+        h: 'Женский торс на змеином теле, в волосах аспиды; у логова стоят каменные фигуры. Встретившийся взглядом делает спасбросок — провал: каменеет; то же для горгоны, увидевшей своё отражение. В ближнем бою противник делает спасбросок, чтобы увернуться от аспидов. Обычное оружие не берёт; отсечённая голова сохраняет силу взгляда ещё сутки.',
+        num: { k: 'fix', v: 1 }, lair: 'Логово с каменными фигурами.', tr: { k: 'referee' } },
+    'Грифон': { w: '3–4', a: '3 (клюв, два когтя)', m: '0', wt: 4,
+        h: 'Крылатый лев; любимая добыча — лошади. Увидев конный отряд, нападает сразу и бьёт по коням; пешим иногда удаётся пройти, если не задерживаться у гнезда. Выращенного в неволе можно обучить нести всадника. В горах иногда стерегут вход в рудник, клад или замок анакима.',
+        num: { k: 'dice', n: 1, d: 3, note: 'к3 охотятся; в гнезде вдвое больше' },
+        lair: 'Гнездо в лесу или горах; на открытой равнине не гнездятся.', tr: { k: 'referee' } },
+    'Гуль': { w: '3–4', a: '4 (когти)', m: '−1', wt: 4,
+        h: 'За городскими воротами знакомый голос советует короткую дорогу через пустыню. Пять раз в день принимает облик любого человека; обращённый делает спасбросок от наваждения (провал — следует указаниям). Бросает путников, когда те собьются с пути, или ведёт в засаду. Ест мертвецов; отвращение к соли: проглоченная соль убивает, железо обжигает.',
+        num: { k: 'fix', v: 1, note: 'в засаде или логове 20–120' },
+        lair: 'Засада или логово: 20–120 гулей; на 1 (к6) ими командует ифрит.', tr: { k: 'referee' } },
+    'Дварф': { w: '3', a: '1 (по оружию)', m: '0', wt: 4,
+        h: 'Встречают в горах. Под землёй видит как человек в сумерках; в бою защищает обычный доспех.',
+        num: { k: 'manual', note: 'разведчик может идти один; с горным обозом — целый отряд охраны' }, lair: null, tr: { k: 'referee' } },
+    'Ифрит': { w: '12–14 (одновременные)', a: '6 (оружие и когти)', m: 'не проверяет', wt: 14,
+        h: 'Великан ростом с пальму: два чёрных крыла, зелёный глаз между рогами, из четырёх рук две оканчиваются львиными когтями. Помнит падение своего народа и винит в нём людей. Летает, не боится огня, пользуется чарами джинна-повелителя; становиться невидимым не умеет. Призванный против него дух воздуха на 1–2 (к6) рассеивается. Железо ранит, съеденная соль убивает. Даже прикованный к пещере ифрит достаёт когтями того, кто стоит в трёх метрах от входа; чары у порога склоняют гостя взяться за поручение хозяина — ифрит освободится, только когда человек выполнит просьбу и вернётся.',
+        num: { k: 'fix', v: 1, note: 'вне логова бродит один' },
+        lair: 'Пещера только в пустыне; вход защищают 5–10 постоянных чар.', tr: { k: 'referee' } },
+    'Джинн': { w: '9–11 (одновременные)', a: '2 (оружие или вихрь)', m: 'не проверяет', wt: 11,
+        h: 'Рождён из бездымного пламени; огонь не берёт. На 1–3 (к6) встреченный джинн невидим. Соль выдаёт любого из народа: не возьмут в руки, проглоченная — смертельный яд без спасброска; железо обжигает и может ранить. Летает, уносит одного пассажира. За раунд: атака, унести пассажира, невидимость, безумие или заклинание — каждое на весь раунд. Знает «Ветер», «Вдохновение», «Смена облика». Призванный против него дух воздуха на 1–2 (к6) рассеивается, отказавшись нападать.',
+        num: { k: 'fix', v: 1, note: 'в городе обычно один' },
+        lair: 'Жилище в лесу, пустыне или на болоте. В пещере живут к3 джинна; в волшебном замке — 1–10 джиннов и повелитель (12–14 одновременных ранений, 4 атаки); ворота охраняет ветер.',
+        tr: { k: 'djinn' } },
+    'Дриада': { w: '3–4', a: '—', m: '0', wt: 4,
+        h: 'Смертная лесная нимфа. При встрече смертный мужчина делает спасбросок от чар: поддавшийся остаётся служить и защищает её даже от товарищей (освобождает сама дриада или рассеивание чар). Захваченную придётся сторожить: в родном лесу ей хватает трёх ходов без присмотра, чтобы скрыться. Если грозит смерть, на 1–3 (к6) за неё вступятся лесные звери (в чужом лесу 1–2). Через месяц вдали от рощи чахнет; каждый следующий месяц спасбросок — провал: смерть.',
+        num: { k: 'dice', n: 1, d: 6, note: 'к6 дриад в роще' }, lair: 'Роща; в ней лежат вещи тех, кто служил прежде.', tr: { k: 'referee', note: 'вещи прежних служителей' } },
+    'Единорог': { w: '1–6 (по виду)', a: '1–3 (по виду)', m: '0', wt: 6,
+        h: 'Бродит один в лесу или на открытом месте. Подпускает человеческую девственницу и рядом с ней движется вдвое медленнее — единственный случай, когда ловчие успевают окружить. Пойманного нельзя выдрессировать: сбежит или убьёт укротителя. Рог (аликорн) исцеляет от любого яда и снимает «Агонию»; в городе за целый аликорн дают 10 000 золотых.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'unicorn' },
+        variant: { die: 6, rows: [
+            { r: [1, 2], name: 'Козлоподобный', a: '1 (рог)', d: 'Похож на козла с одним длинным рогом' },
+            { r: [3, 4], name: 'Конеподобный', a: '3 (рог, два копыта)', d: 'Похож на коня, обгоняет остальных сородичей', share: 'Орикс' },
+            { r: [5, 6], name: 'Единорог Ктесия', a: '2 (рог, топтание)', d: 'Ослиная голова, грудь и передние ноги носорога, задние ноги антилопы; рог в чёрную, белую и красную полоску' },
+            { r: [3, 4], name: 'Орикс', a: '1 (рог)', d: 'Стройная антилопа с белым у основания и багряным у острия рогом', share: 'Конеподобный' }
+        ] } },
+    'Жар-птица': { w: '1–2', a: '1 (клюв)', m: '0', wt: 2,
+        h: 'Перо горит без конца: малым светят как свечой, большим — как факелом. За яйцо дают целое состояние. Добывший честно и вырастивший сам получает +1 ко всем броскам в её присутствии; укравший — −1. Обычное оружие не берёт.',
+        num: { k: 'threat' }, lair: null, tr: { k: 'note', note: 'перо; за яйцо дают целое состояние' } },
+    'Змей Горыныч': { w: '12–14', a: '1 на каждую голову (укус или дыхание)', m: '0', wt: 14,
+        h: 'Несколько голов, каждая говорит за себя: пока одна выслушивает просьбу, другая может перебить и назвать свою цену. Каждая голова кусает или бьёт дыханием (частота — по возрасту великого вирма). Отсечённая голова отрастает, если шею вовремя не прижечь. Обычное оружие не берёт. На 1 (к6) владеет магией.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'dragon' }, dragon: 'gorynych' },
+    'Кабан': { w: '3–4', a: '2 (клыки)', m: '−1', wt: 4,
+        h: 'На кормёжку выходит от 2 до 20 кабанов. Группа до пяти голов — взрослые самцы; в большом стаде на каждые пять голов примерно один секач, три свиньи и один поросёнок. Раненый кабан бьётся без штрафов за ранения. В густом подлеске путник может выйти прямо к поросёнку и лишь тогда заметить свинью.',
+        num: { k: 'range', min: 2, max: 20, note: 'на кормёжке' }, lair: null, tr: { k: 'none' } },
+    'Каппа': { w: '5–6 (одновременные)', a: '4 (кулаки)', m: '−2', wt: 6,
+        h: 'Человек с черепашьим панцирем, быстрый пловец и любитель проказ. На темени чаша с водой: выплеснуть воду — каппа лишится способности двигаться; то же при потере руки. Предложившему наполнить чашу или вернуть руку на место каппа согласится помочь.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Келпи': { w: '3–4', a: '2 (копыта)', m: '0', wt: 4,
+        h: 'У переправы подпускает путников; в облике черты лошади и женщины. С каждым новым седоком спина удлиняется. С седоками бросается в глубокую воду, чтобы утопить и сожрать. Плавает стремительно; обычное оружие не берёт.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Кентавр': { w: '3–4', a: '1 (оружие или копыта)', m: '0', wt: 4,
+        h: 'Вне лесного стойбища встречаются к6 кентавров; с ними нередко пируют сатиры, поблизости может быть нимфа или роща гамадриад. Если намерения неясны — к6: 1–2 нападают, 3–4 пропускают, 5–6 принимают с шумным радушием. Приняв приглашение, гость должен пробыть в стойбище целые сутки; уход раньше — оскорбление, за которое берутся за оружие.',
+        num: { k: 'dice', n: 1, d: 6, note: 'к6 вне стойбища' },
+        lair: 'Стойбище: к6 мужчин, 2к6 женщин и 1–8 детей.', tr: { k: 'referee' } },
+    'Керинейская лань': { w: '3–4', a: '1 (рога)', m: '−1', wt: 4,
+        h: 'Любимица богов живёт в лесу; следы свежие, а самой лани не видать. Убегает, пока ей оставляют дорогу. Каждый рог из чистого золота стоит 20 000 золотых. Убивший делает спасбросок с −2, каждый помогавший — с −1; при провале боги забирают жизнь виновного.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'hind' } },
+    'Коза или овца': { w: '1–2', a: '1 (бодание)', m: '−1', wt: 2,
+        h: 'Пасутся на склонах; за овечьим стадом в горах или на побережье порой присматривает циклоп. Овец держат ради шерсти. Мяса козы или овцы при умелой разделке хватит на тридцать человек.',
+        num: { k: 'manual', note: 'стадо; у циклопа 10–100 овец' }, lair: null, tr: { k: 'note', note: 'шерсть, мясо' } },
+    'Крокодил': { w: '3–4', a: '1 (укус)', m: '−1', wt: 4,
+        h: 'У берега над водой видны только глаза и ноздри. Подкарауливает добычу на водопое; застаёт жертву врасплох на 1–3 (к6).',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Леукрокотта': { w: '5–6', a: '2 (укус и топтание)', m: '0', wt: 6,
+        h: 'Оленьи ноги с раздвоенными копытами, львиная грива, барсучья голова. Из укрытия подражает чужим голосам; пошедший на зов делает спасбросок — при провале зверь застаёт его врасплох.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Леший': { w: '9–11 (одновременные)', a: '2–12', m: 'не проверяет', wt: 11,
+        h: 'Может быть великаном, похожим на дерево, а через мгновение стать ростом с ребёнка. Похищает детей и оставляет вместо них подменышей. В исполинском обличье швыряет валуны и крушит постройки.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Лев': { w: '5–6', a: '3 (укус и два когтя)', m: '−1', wt: 6,
+        h: 'Сходятся у падали по 2–12; голодные идут за стадом и могут напасть на человека. Лев остаётся незамеченным перед броском на 1–3 (к6). Если львы уже кормятся, отряд может обойти тушу поодаль.',
+        num: { k: 'range', min: 2, max: 12, note: 'у падали' }, lair: null,
+        tr: { k: 'note', note: 'шкура стоит 1–5 серебряных монет' } },
+    'Ликантроп': { w: 'по облику: волк 1–2, медведь 3–4, лев 5–6', a: 'по облику: 1 / 2 / 3', m: 'не проверяет', wt: 6,
+        h: 'Одни меняют облик добровольно (шкура, пояс, заклинание), другие — поневоле (проклятие, незалеченная рана от оборотня). Выберите условие превращения, например полнолуние. Раненый оборотнем делает спасбросок: провал — заражён (до первого превращения можно исцелить магией). В человеческом облике сохраняет призвание. Обычным оружием нужно вдвое больше ранений; серебро и зачарованное оружие с ячменным зерном поражают в полную силу. Серый камень, благословлённый жрецом, оберегает от нападения; настоящее имя с 3 м — оборотень принимает человеческий облик и убегает. Гибель мага снимает проклятие; уничтожение шкуры/пояса убивает меняющего облик. После смерти может встать вампиром.',
+        num: { k: 'range', min: 1, max: 20, note: 'стая взрослых' },
+        lair: 'В логове на каждого приходится 10–100 серебряных монет.',
+        tr: { k: 'lycan' },
+        forms: { 'медведь': { w: '3–4', a: '2' }, 'волк': { w: '1–2', a: '1 (укус)' }, 'лев': { w: '5–6', a: '3' } } },
+    'Лошадь': { w: '5–6', a: '1 (копыта)', m: '−1', wt: 6,
+        h: 'Дикие лошади ходят табунами по 3–30. Чтобы поймать одну, придётся обогнать или перекрыть выход; каждый ловец удержит только одну. Опытный конюх со временем приучит к рукам; к седлу, упряжи и бою приучают отдельно. У тяжёлой лошади удар копытом наносит два ранения.',
+        num: { k: 'range', min: 3, max: 30, note: 'табун' }, lair: null, tr: { k: 'none' } },
+    'Мардяхор': { w: '7–8', a: '3 (когти или хвостовые шипы)', m: '0', wt: 8,
+        h: 'Лицо человека, лапы могучего льва; на конце хвоста 24 ядовитых шипа. Мечет их на дальность выстрела из длинного лука — за каждый выстрел вычеркните один шип; при попадании жертва делает спасбросок от яда. Обычное оружие не берёт.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Медведь': { w: '3–4', a: '2 (лапа и укус)', m: '−1', wt: 4,
+        h: 'Обычно нападает, если голоден, разъярён или защищает детёнышей; медведица с медвежатами Мораль не проверяет.',
+        num: { k: 'd6map', map: [[1, 3, 1], [4, 4, 2], [5, 5, 3], [6, 6, 4]], note: 'к6: 1–3 — один, 4 — двое, 5 — трое, 6 — четверо' },
+        lair: null, tr: { k: 'note', note: 'шкура взрослого зверя стоит 1–5 серебряных монет' } },
+    'Минотавр': { w: '5–6', a: '2 (рога и кулаки)', m: '−1', wt: 6,
+        h: 'Следы в логове человеческие, из-за поворота первой показывается бычья голова. Живёт один в лесу, в горах или в лабиринте, сложенном человеческими руками; на своей территории нападает сразу. Вне логова к6: 1–4 голоден и нападает на людей, 5–6 может пропустить.',
+        num: { k: 'fix', v: 1 }, lair: 'Лес, горы или рукотворный лабиринт.', tr: { k: 'referee', note: 'сокровища попадаются лишь среди вещей его жертв' } },
+    'Морской змей': { w: '5–6 у озёрного, 9–11 у морского, 12–14 у исполинского', a: '1 (укус или удар по судну)', m: '0', wt: 11,
+        h: 'Охотится в одиночку, выбирает добычу не крупнее двух третей собственной величины. Сравните длину корабля с длиной змея. Между горбами озёрного змея пройдёт лодка; обычный морской может повредить корабль; исполинский, приняв судно за добычу, разламывает корпус, всплывая под ним. Не дышит огнём. Укушенный делает спасбросок — провал: гибнет в пасти. При кораблекрушении сначала выясните, кто успел схватиться за обломок или спустить шлюпку; уцелевших пловцов через 1–10 дней вынесет на берег. В большом озере встречается лишь меньшая разновидность.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' },
+        forms: { 'озёрный': { w: '5–6' }, 'морской': { w: '9–11' }, 'исполинский': { w: '12–14' } } },
+    'Мул': { w: '1–2', a: '1 (копыта)', m: '−1', wt: 2,
+        h: 'Обычно привык к человеку; в глуши изредка встречаются ушедшие из-под присмотра животные, по 2–20. Погонщик может вернуть их в упряжь. Если мул упирается возле осыпи или переправы, посмотрите, куда ему приходится ставить копыта под вьюком. Мул может лягнуть, если стоять к нему вплотную сзади.',
+        num: { k: 'range', min: 2, max: 20, note: 'в глуши; с поклажей — по обстановке' }, lair: null, tr: { k: 'note', note: 'поклажа — по обстановке' } },
+    'Нага': { w: '7–8 (одновременные)', a: '4 (укусы)', m: 'не проверяет', wt: 8,
+        h: 'Змея с человеческим лицом; на суше встречается одна. К6 доз яда: при попадании в рану жертва делает спасбросок от яда с −1 (провал — смерть, частичный — ещё одно ранение); сухой укус наносит обычную рану; за десять ходов восстанавливается одна доза. Наге ведомы тайны жизни и бессмертия — за услугу может открыть одну. Главное сокровище носит на себе: камень во лбу стоит по 1000 золотых за каждое ранение, которое она способна выдержать.',
+        num: { k: 'fix', v: 1, note: 'на суше одна' },
+        lair: 'Под водой у тихого берега — дворец, в нём живут к6 наг.',
+        tr: { k: 'naga' } },
+    'Немейский лев': { w: '7–8', a: '3 (укус и два когтя)', m: 'не проверяет', wt: 8,
+        h: 'Охотится один в горах, лесу и на открытой земле; о шкуру ломаются клинки. Ранить можно магией или магическим оружием. Удар дубины или булавы оглушает на три раунда, если им можно нанести хотя бы три ранения разом; богатырю хватит двух полных раундов, чтобы задушить оглушённого. Снять шкуру можно только когтями самого льва; она защищает спину и голову от обычных лезвий, в городе стоит 20 000 золотых.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'nemean' } },
+    'Нимфа': { w: '3–4 (одновременные)', a: '—', m: 'не проверяет', wt: 4,
+        h: 'Ореада живёт в горах, наяда — в текучей воде, нереида — в море (морской дворец скрыт чарами под водой). Нимфа первой не нападает; до десяти раз в день меняет облик. Смертному мужчине предлагает остаться: провал спасброска от чар — остаётся на к6 недель либо пока чары не рассеют. Нимфу можно увести из владений: каждый день пытается ускользнуть, вдали от дома через 4–10 недель умирает.',
+        num: { k: 'fix', v: 1, note: 'нереида вдали от дворца — одна; у горного источника к3 нимф, воитель и к6 сатиров' },
+        lair: 'Дворец нереид под водой; у горного источника или водопада — к3 нимф, воитель и к6 сатиров.', tr: { k: 'referee' } },
+    'Нингё': { w: '3–4', a: '1', m: '0', wt: 4,
+        h: 'Быстрый пловец из морского народа, похож на рыбу с обезьяньим лицом. Съевший нингё проживёт вдвое дольше отпущенного, но с этого дня его будут преследовать несчастья.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Обезьяна': { w: '3–4', a: '2 (хватка и укус)', m: '−1', wt: 4,
+        h: 'В лесистых горах и лесах держатся группы до десяти крупных обезьян. В полной группе примерно три взрослых самца, четыре самки и три детёныша. Когда стая отступает, определите, кто несёт детёныша и кто между ним и путниками. Детёныш выдерживает одно ранение и сам в бой не вступает.',
+        num: { k: 'range', min: 1, max: 10, note: 'группа до десяти' }, lair: null, tr: { k: 'none' } },
+    'Огр': { w: '5–6', a: '2 (сук, камень или кулаки)', m: '−1', wt: 6,
+        h: 'Бесплодный потомок тролля и трау. Неповоротлив и соображает медленно, но легко вырывает ветвь, которую человек едва поднимет. Оружие подбирает на месте. Тролли набирают огров в войско, но держат в стороне от трау.',
+        num: { k: 'range', min: 1, max: 4, note: 'по одному или группами до четырёх' },
+        lair: 'В логове 11–20 огров.', tr: { k: 'referee' } },
+    'Олень': { w: '1–2', a: '1 (рога или копыта)', m: '−1', wt: 2,
+        h: 'На знакомых тропах остаётся незамеченным на 1–3 (к6). Мяса одного оленя при умелой разделке хватит на тридцать человек.',
+        num: { k: 'threat' }, lair: null, tr: { k: 'note', note: 'мясо на тридцать человек' } },
+    'Пегас': { w: '5–6', a: '2 (копыта)', m: '−1', wt: 6,
+        h: 'Крылатый жеребец, по преданию рождённый из крови убитой горгоны. Встречается поодиночке; даже в лесу или на открытой равнине увидеть одного — редкость. Сложив орлиные крылья, подпускает всадника с чистой совестью и может унести по воздуху; силой его не объездить.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Питон': { w: '1–2', a: '1 (укус и захват)', m: '−1', wt: 2,
+        h: 'У болотной протоки встречаются к3 питона. При встрече к6: 1–3 бросается на добычу, 4 уползает, 5–6 лежит неподвижно, пока не тронут или не подойдут на 3 м. Поймав жертву, обвивается; при попытке вырваться удвойте число ранений питона для определения силы захвата. Схватив добычу, не бросается на других, пока не вынудят защищаться.',
+        num: { k: 'dice', n: 1, d: 3, note: 'к3 у болотной протоки' }, lair: null, tr: { k: 'none' } },
+    'Ракшас': { w: '5–6', a: '2 (ядовитые ногти)', m: '−1', wt: 6,
+        h: 'Пять ступней, пальцы загнуты в обратную сторону, зрачки узкие; кожа жёлтая, зелёная или синяя. Среди людей ходит в чужом обличье (меняет четыре раза в день; разрушенные чары — собственный облик не меньше трёх ходов). Задетый ногтями делает спасбросок от яда с −1: успех — даже царапины нет, частичный — одно ранение, провал — смерть; днём +2 к броску и к распознаванию облика. Кормится людьми, любит кладбища и лесные дороги.',
+        num: { k: 'dice', n: 1, d: 6, note: 'вне логова к6' },
+        lair: 'В логове втрое больше; хозяин логова вдвое крупнее остальных.',
+        tr: { k: 'djinn', note: 'в тайнике спрятан клад джинна' } },
+    'Редкап': { w: '3–4 (одновременные)', a: '4', m: 'не проверяет', wt: 4,
+        h: 'Злобный карлик, колпак пропитан кровью жертв; если кровь высохнет — лишится тела. Можно склонить к разбою, пообещав свежую кровь. Раз в день обретает силу огра. Ранить можно магией или особым средством.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Рух': { w: '7–8', a: '3 (клюв и два когтя)', m: '0', wt: 8,
+        h: 'Разумный орёл величиной с дракона хватает человека и уносит ввысь. Нападает на грифонов, гиппогрифов и химер; на дракона — только защищая гнездо или если птиц вдвое больше. Вдали от гор и высоких пустынных плато встречается одна взрослая птица; гнездящаяся пара год за годом возвращается на один утёс. Если добычу можно настичь только в воздухе, на первый полёт решится лишь на 1 (к6). Приручить можно птицу, выращенную из яйца или взятую прежде, чем она научилась летать.',
+        num: { k: 'fix', v: 1, note: 'одна взрослая; гнездящаяся пара' },
+        lair: 'Гнездо (к6): 1–3 — к3 яйца, одна птица сидит, другая охотится; 4–5 — один-два птенца, оба родителя охотятся (птенец 1–2 ранения, оперившийся 3–4); 6 — родители улетели, молодая птица (5–6 ранений) нападает на всякого у гнезда.',
+        tr: { k: 'none' } },
+    'Сатир': { w: '1–2', a: '1 (рожки)', m: '0', wt: 2,
+        h: 'Следы козьих копыт вокруг кострища выдают место пиров. В одиночку старается уйти незамеченным; если преследуют — заиграет на свирели: все слышащие делают по одному спасброску за встречу, поддавшийся следует за музыкой в лес и дерётся с тем, кто встанет на дороге (можно удержать силой; чары спадают, когда смолкает свирель). Охотно играет в обществе нимф и кентавров.',
+        num: { k: 'threat' }, lair: null, tr: { k: 'note', note: 'свирель — всё его имущество; изредка дорогой инструмент тонкой работы' } },
+    'Селки': { w: '3–4', a: '1 (укус)', m: 'не проверяет', wt: 4,
+        h: 'Сбросив тюленью шкуру на берегу, становится женщиной; чтобы снова стать тюленем, нужно надеть шкуру. Завладевший шкурой получает власть и над хозяйкой. Мужчина при встрече делает спасбросок — провал: подпадает под чары. Раз в день может предсказать будущее при условии, что сама не задаёт вопросов.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Сирин': { w: '1–2 (одновременные)', a: '—', m: 'не проверяет', wt: 2,
+        h: 'Голова и грудь женщины, тело и крылья большой хищной птицы. Стремительно летает, в бой не вступает. Каждый услышавший песню делает спасбросок: провал — забывает про пищу, питьё и сон, готов на всё, лишь бы песня звучала дальше. Ранить можно магией или особым средством.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Ско’ла': { w: '14', a: '3 (когти, укус)', m: '+1', wt: 14,
+        h: 'Крылатому вирму 840 лет. Голова крокодилья, шея змеиная, лапы тигриные, брюхо закрыто панцирем, хвост раздвоен. Огонь достаёт на 110 м. Владеет магией. Храбр и высокомерен; на его слово опасно полагаться. Добычу делит поровну, хотя идти за ней вместе с отрядом откажется.',
+        num: { k: 'fix', v: 1 }, lair: 'Пещера в горах.', tr: { k: 'skola' }, dragon: 'skola' },
+    'Сфинкс': { w: '5–6 (одновременные)', a: '3 (когти и укус)', m: '0', wt: 6,
+        h: 'С человеческой головой: одинокий сфинкс сторожит проход в пустыне или горах. Увидев отряд в 30 м, задаёт одному путнику загадку (одна на всю жизнь; три боевых раунда на ответ). Если исход броском — 2к6 в конце третьего раунда: 9+ ответ верен (сфинкс гибнет), 6–8 уточняющий вопрос (примет ответ, если путник сумеет объяснить), ≤5 не успел (отгадчик гибнет); знание мага по теме даёт +1. Вмешавшийся до ответа делает спасбросок: успех — обычный бой, провал — сфинкс убивает. Со звериной головой (баран или ястреб): охотятся по к6, окружают добычу и нападают.',
+        num: { k: 'fix', v: 1, note: 'с человеческой головой — один; со звериной — к6' },
+        nv: { 'звериная': { k: 'dice', n: 1, d: 6, note: 'охотятся по к6' } },
+        lair: 'Проход в пустыне или горах.', tr: { k: 'referee' } },
+    'Стимфалийская птица': { w: '1–2', a: '1 (перо-дротик)', m: '−1', wt: 2,
+        h: 'На берегах озёр и болот держатся стаи в 10–60 птиц. Кормятся зерном с ближайших полей, нападают на людей. Складывает крылья и мечет перо на дальность короткого лука (ближе 3 м стрелять не может). На земле оперение защищает как латы; взлетев, лишается защиты и не может метать перья. Если согнать стаю с берега, лучники смогут стрелять по незащищённым птицам.',
+        num: { k: 'range', min: 10, max: 60, note: 'стая' }, lair: null, tr: { k: 'none' } },
+    'Стихийный дух': { w: '9–11 (одновременные)', a: '2–10 (по величине и стихии)', m: 'не проверяет', wt: 11,
+        h: 'Обретает тело там, где есть его стихия. Малому воплощению — две атаки, вихрю или волне величиной с дом — до десяти. Ранить можно магическим оружием; чары действуют только через собственную стихию. Воздух: буря швыряет человека с высоты (спасбросок ухватиться); против джинна и ифрита призванный дух может отказаться сражаться. Земля: движущийся холм роет путь через камень; валун бьёт по стене или кораблю с силой двух катапульт. Огонь: поджигает даже сырые предметы; охваченный делает спасбросок (провал — сгорает, частичный — вырывается с ранением). Вода: волна опрокидывает судно и утягивает людей; захваченный делает спасбросок каждый ход (успех — выныривает, частичный — остаётся под водой, провал — тонет).',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' },
+        forms: { 'воздух': {}, 'земля': {}, 'огонь': {}, 'вода': {} } },
+    'Тигбануа': { w: '3–4', a: '2 (когти)', m: '+1', wt: 4,
+        h: 'Длинная шея, один красный глаз. В горах, лесу и на городских кладбищах встречаются группы от одного до десяти духов. Питаются человеческой мертвечиной, на живых нападают при встрече; застают врасплох на 1–3 (к6). Кошка чует тигбануа до нападения и предупредит путников.',
+        num: { k: 'range', min: 1, max: 10, note: 'группы от одного до десяти' }, lair: 'В логове этих духов нет сокровищ.', tr: { k: 'none' } },
+    'Тигр': { w: '5–6', a: '3 (укус и два когтя)', m: '−1', wt: 6,
+        h: 'В пустошах встречаются к6 тигров. Нападает, когда ему угрожают, преграждают отступление или приближаются к детёнышам; застаёт добычу врасплох на 1–3 (к6). Если первый прыжок из засады достиг цели, жертва вдобавок к ране делает спасбросок — провал: тигр сбивает её с ног.',
+        num: { k: 'dice', n: 1, d: 6, note: 'к6 в пустошах' }, lair: null,
+        tr: { k: 'note', note: 'шкура стоит 1–10 серебряных монет' } },
+    'Трау': { w: '9–11', a: '2 (дубина или кулаки)', m: '+1', wt: 11,
+        h: 'Вдвое крупнее тролля; шкура на плечах и дубина — всё его имущество. Живёт в пещерах в горах и на морском берегу, ест людей и бросается на всякого, кроме тролля (в союзной орде от него держатся подальше).',
+        num: { k: 'manual', note: 'поодиночке или парами; если трое — два взрослых и детёныш (7 ранений)' },
+        lair: 'Пещеры в горах и на морском берегу.', tr: { k: 'none', note: 'шкура на плечах и дубина — всё его имущество' } },
+    'Тролль': { w: '7–8', a: '3 (дубина)', m: '+1', wt: 8,
+        h: 'Косматый великан с большим носом водит отряды огров на войну. Трау признают его родичем, анакимы нападают при встрече. Живёт в горах или в лесу, владеет магией; простое оружие не берёт. На рассвете обращается в камень, с закатом оживает там, где его застал день.',
+        num: { k: 'threat' }, lair: 'Горы или лес.', tr: { k: 'referee' } },
+    'Тунда': { w: '1–2', a: '1', m: '−1', wt: 2,
+        h: 'Приходит за женщиной или ребёнком в облике того, кому в доме доверяют; в личине всегда найдётся изъян (деревянная нога, повязка на глазу). Уводит жертву и долго держит живой, понемногу питаясь её плотью. Обычное оружие не берёт.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Тур': { w: '7–8', a: '2 (рога и топтание)', m: '−1', wt: 8,
+        h: 'Дикий бык пасётся на равнине, в лесу и в горах. На 1–2 (к6) встречается один бык, иначе при нём к6 коров (5–6 ранений) и 1–10 телят (1–3 ранения). Стадо спокойно, пока на него не напали; бык бросается на всякого, кто подошёл ближе 18 м. Путники могут уступить ему тропу, пока он следит за ними с места.',
+        num: { k: 'tur' }, lair: null, tr: { k: 'none' } },
+    'Тэнгу': { w: '3–4', a: '1–2 (копьё или лук)', m: '+1', wt: 4,
+        h: 'Крылатые люди живут в лесу; зрение не хуже ястребиного. Дозорные видят с верхушек деревьев, что у путников в руках. Воин носит кожаный доспех, копьё и лук. Каждые три хода к дозору на подмогу прилетают ещё 11–20 воинов; всего может прибыть к6 таких отрядов.',
+        num: { k: 'range', min: 1, max: 10, note: 'пеший или лётный дозор' },
+        lair: 'Город на деревьях (высота 9–24 м): 40–400 воинов; гости поднимаются по лестнице или на подъёмнике.',
+        tr: { k: 'referee' } },
+    'Фейри': { w: '1–2', a: '1 (маленький лук)', m: '0', wt: 2,
+        h: 'Маленький крылатый фейри живёт в лесу, на болоте или среди лугов. Летает быстрее, чем ходит; по желанию становится невидимым (выдаёт слабое свечение). Железо ранит и обжигает руки. Если пойман с краденым или принял подарок — обязан оказать услугу владельцу вещи.',
+        num: { k: 'threat' }, lair: null, tr: { k: 'referee' } },
+    'Химера': { w: '7–8', a: 'до 3 (по одной на голову)', m: '0', wt: 8,
+        h: 'Львиное тело, орлиные крылья, три головы. Львиная кусает только спереди; козлиная растёт из правого бока (достаёт вперёд, вправо и назад); змеиная на конце хвоста (вправо, влево и назад) — подошедший слева имеет дело только со змеёй. Перед атакой козлиной головы к6: 1–3 пламя на 15 м (спасбросок: провал — два ранения, частичный — одно), 4–6 рога; после выдоха два раунда только рога. Укус змеиной головы — спасбросок от яда (провал — смерть, частичный — ещё одно ранение). Львиный укус — обычная рана.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Хэтэ': { w: '3–4', a: '1 (рог)', m: '0', wt: 4,
+        h: 'Робкий однорогий зверь, в котором угадываются и бык, и лев; разыскивают, когда нужно рассудить спор. Чует ложь и различает виновного, хотя не произносит ни слова. Обычное оружие не берёт.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Циклоп': { w: '7–8', a: '2 (дубина) или 1 (валун после подготовки)', m: 'не проверяет', wt: 8,
+        h: 'Одноглазый пастух живёт в пещере на побережье или в горах; стадо в 10–100 овец держится не дальше сотни метров. Ест и человеческое мясо; обмануть легче, чем переждать обстрел. Один раунд поднимает валун, в следующий бросает: 6–36 м, поражает всех в 3 м от падения; по стенам и кораблям — с силой тяжёлой катапульты. Отряд, погубивший циклопа, делает один общий спасбросок с −2: провал — путь домой растянется на к6 лет блужданий.',
+        num: { k: 'fix', v: 1 }, lair: 'Пещера на побережье или в горах; стадо 10–100 овец.', tr: { k: 'note', note: 'стадо 10–100 овец' } },
+    'Черуфе': { w: '3–4 (одновременные)', a: '2–6', m: '+1', wt: 4,
+        h: 'Дух в жерле вулкана требует жертв от окрестных селений — такова цена за отсрочку извержения. Огонь и жар нипочём; деревянное оружие при ударе сгорает, металлическое плавится. Ранить можно магией или особым средством.',
+        num: { k: 'fix', v: 1 }, lair: 'Жерло вулкана.', tr: { k: 'none' } },
+    'Чёрный эльф': { w: '3–4', a: '1 (по оружию)', m: '0', wt: 4,
+        h: 'Свартальвы живут под землёй; любят прикидываться проводниками и водить путников кругами: на 1–2 (к6) отряд заблудится, на 3–6 выйдет к засаде (в засаде по четыре свартальва на путника). Видят в полной темноте, искусно работают по металлу (железо жжёт). Носят кожаные доспехи, у каждого десятого кольчуга. Солнечный луч или магический свет как солнце обращает в камень без спасброска; обычный фонарь не вредит.',
+        num: { k: 'manual', note: 'в засаде по четыре на путника; иначе по обстановке' },
+        lair: 'Подземелье.', tr: { k: 'referee' } },
+    'Эльф': { w: '3–4', a: '1 (лук или клинок)', m: '0', wt: 4,
+        h: 'Встречают в лесу и на открытой земле. Мастера делают вещи, с которыми соперничают лишь изделия свартальвов. Владеет чарами, избегает железа. Эльфа можно расспросить об альвах; убившего альва чарами эльфы считают врагом своего народа.',
+        num: { k: 'threat' }, lair: null, tr: { k: 'referee' } },
+    'Домовой': { w: '5–6 (одновременные)', a: '1 (кинжал или молоток)', m: '−2', wt: 6,
+        h: 'Если оставить на ночь угощение, к утру сделает работу двенадцати человек. Маленький косматый дух; невозможно застать врасплох. Может сделаться невидимым, но перед ударом вынужден показаться. Владеет магией; обычное оружие не берёт. Если год и один день не оставлять угощения — станет марой и начнёт насылать кошмары (спасбросок за ночь; месяц таких ночей губит человека).',
+        num: { k: 'fix', v: 1 }, lair: 'Дом.', tr: { k: 'none' } },
+    'Калликанцарос': { w: '3–4', a: '1 (укус)', m: '−1', wt: 4,
+        h: 'В зимнее солнцестояние из-под земли выбирается существо с ослиными ушами и угольно-чёрной кожей; красные глаза светятся, хотя сам слеп. Две недели изводит людей; нападает только в темноте и застаёт врасплох на 1–3 (к6).',
+        num: { k: 'fix', v: 1 }, lair: 'Под землёй; появляется две недели от зимнего солнцестояния.', tr: { k: 'none' } },
+    'Подменыш': { w: '3', a: '1 (по оружию)', m: '0', wt: 4,
+        h: 'Встречается поодиночке среди людей в любой местности. Леший оставляет подменыша в доме взамен похищенного ребёнка. Родные могут рассказать, где в последний раз видели пропавшего; сам подменыш порой не знает, куда леший унёс ребёнка.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'none' } },
+    'Лун': { w: '9–11 (по возрасту вирма)', a: '1–3 (по возрасту)', m: '0', wt: 11,
+        h: 'Длинный и гибкий, одинаково быстро скользит по земле и воде; большинство умеют летать, у некоторых большие крылья. Многие говорят и принимают облик людей и зверей — в таком облике может прожить среди людей достаточно долго, чтобы обзавестись семьёй. Обычное оружие не берёт. На 1 (к6) владеет магией.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'dragon' }, dragon: 'lun' },
+    'Линдвурм': { w: '9–11 (по возрасту вирма)', a: '1–3 (по возрасту)', m: '0', wt: 11,
+        h: 'У северных вирмов даже детёныши одного выводка мало похожи друг на друга; часто безногие. Крылатый линдвурм стремительно летает, бескрылый так же быстро плавает.',
+        num: { k: 'fix', v: 1 }, lair: null, tr: { k: 'dragon' }, dragon: 'lindwurm' }
+};
+
+// Варианты имён из ячеек → статья бестиария.
+const ENC2_ALIAS = {
+    'Нимфа (ореада)': ['Нимфа', 'ореада'],
+    'Нимфа (наяда)': ['Нимфа', 'наяда'],
+    'Нимфа (нереида)': ['Нимфа', 'нереида'],
+    'Стихийный дух земли': ['Стихийный дух', 'земля'],
+    'Стихийный дух огня': ['Стихийный дух', 'огонь'],
+    'Стихийный дух воздуха': ['Стихийный дух', 'воздух'],
+    'Стихийный дух воды': ['Стихийный дух', 'вода'],
+    'Ликантроп (медведь)': ['Ликантроп', 'медведь'],
+    'Морской змей (исполинский)': ['Морской змей', 'исполинский'],
+    'Морской змей': ['Морской змей', 'морской'],
+    'Овца': ['Коза или овца', 'овца'],
+    'Коза': ['Коза или овца', 'коза'],
+    'Мул с поклажей': ['Мул', null],
+    'Дракон (вирм)': ['Дракон', 'вирм'],
+    'Дракон (великий вирм)': ['Дракон', 'великий вирм'],
+    'Змей Горыныч': ['Змей Горыныч', null],
+    'Ско’ла': ['Ско’ла', null],
+    'Лун': ['Лун', null],
+    'Линдвурм': ['Линдвурм', null]
+};
+
+// Людские отряды (приложение II, «Люди», с. 57–59).
+const HUMAN2 = {
+    'Человек': { w: '3', a: '1 (по оружию)', m: '0',
+        h: 'У встреченного человека есть призвание и дело, ради которого он здесь оказался. Сначала определите, как путники могут помочь ему или помешать. Если намерения неясны — бросок реакции на 2к6. Доспех, щит и оружие по обычным правилам; для героя, мага или обученного воина используйте атаки и Мораль его призвания.',
+        num: { k: 'manual', note: 'численность по обстановке' }, tr: { k: 'human' } },
+    'Разбойники': { w: '3 (у вожака — по призванию)', a: '1 (по оружию)', m: '0',
+        h: 'Одинокий разбойник, ватага или лагерь до 500 человек. Есть добыча на примете и место, где её укрывают. Предводители и спутники входят в численность. Небольшие ватаги ходят пешком, в кожаных доспехах, со щитами; в большом отряде — стрелки и всадники. Состав сотни: 35 пеших со щитами, 25 лучников или арбалетчиков, 25 легковооружённых всадников, 15 всадников в среднем доспехе; предводителю может принадлежать тяжёлый боевой конь.',
+        num: { k: 'manual', note: 'выберите численность по обстановке (1–500)', max: 500 }, tr: { k: 'human' }, leaders: 'bandits' },
+    'Повстанцы': { w: '3 (у вожака — по призванию)', a: '1 (по оружию)', m: '0',
+        h: 'Связаны общим делом: назовите власть, против которой они поднялись, и тех, на чью помощь рассчитывают. У одной заставы разбойник захочет серебро с купца, а повстанец — узнать, когда повезут арестованных. Численность и предводители — как у разбойников; в лагере свыше ста — к6 за каждую полную сотню (1–2: Служитель или Заклинатель, одно призвание для всего лагеря).',
+        num: { k: 'manual', note: 'выберите численность по обстановке (1–500)', max: 500 }, tr: { k: 'human' }, leaders: 'bandits' },
+    'Свита': { w: '3 (предводитель — по призванию)', a: '1 (по оружию)', m: '0',
+        h: 'Люди на службе у одного господина: сборщик податей предъявит печать, оруженосец назовёт имя, проситель расскажет, за каким решением следует третий день. Сначала определите, кто этот человек и куда направляется. У Воина среди ближних спутников могут быть соратник, Заклинатель или Служитель; Заклинателя сопровождают ученик, телохранитель или фамильяр; Служителя — послушники или вооружённый защитник. Чудесных существ выберите из бестиария. В малой свите видно, кому доверены щит, знамя или дорожная казна. В свите правителя на сотню вооружённых: ~30 пехотинцев в средних доспехах, 30 пеших стрелков, 20 конных арбалетчиков, 20 тяжеловооружённых всадников.',
+        num: { k: 'retinue' }, tr: { k: 'human' } },
+    'Скитальцы': { w: '3', a: '1 (по оружию)', m: '0',
+        h: 'По дорогам тёплых и умеренных земель движутся повозки с целыми семьями. На ночлеге старшие договариваются о воде и пастбище; землевладелец может запретить остановку, хотя его люди приходят торговать. К6 один раз на весь обоз: на 1–3 со скитальцами едет известный Воин или Заклинатель (решите, чья повозка и с кем связан родством). Среди каждых пяти вооружённых защитников: трое пеших со щитами, один стрелок, один всадник; остальные заняты детьми, упряжью и имуществом.',
+        num: { k: 'wanderers' }, tr: { k: 'human' } },
+    'Налётчики': { w: '3', a: '1 (по оружию)', m: '0',
+        h: 'Конные отряды сухих земель и открытой равнины. Отряд меньше 30: к6 — 1–3 ведёт опытный Воин или Заклинатель, 4–6 один из налётчиков, знающий дорогу. При 30 и более — предводители по таблице разбойников. Служитель: при 30 людях на 1 (к6), при 31–100 на 1–2, свыше ста — к6 за каждую полную сотню (1–2). Малый отряд целиком конный; на равнине ~7 всадников из 10 с луками; в пустыне основа — лёгкая конница, пешие лучники — пятая часть. Защищая кочевье, держатся без проверки Морали, пока противник не превзойдёт их числом более чем вчетверо.',
+        num: { k: 'manual', note: 'численность по обстановке' }, tr: { k: 'human' }, leaders: 'raiders' },
+    'Морские разбойники': { w: '3', a: '1 (по оружию)', m: '0',
+        h: 'Ходят по морю, большим озёрам и судоходным рекам; встреча на воде или у причала, где команда ищет покупателя на груз. На каждые полные 30 человек — опытный Воин; на каждую полную сотню — ещё один прославленный предводитель (у команды в 60 человек двое опытных Воинов). За каждые полные 30 — к6: на 1–2 есть Заклинатель (назовите чары, ради которых капитан держит его на борту). Из десяти бойцов: шестеро в кожаном доспехе со щитом, трое с лёгкими арбалетами, один с тяжёлым.',
+        num: { k: 'manual', note: 'число по судну или числу судов у стоянки' }, tr: { k: 'human' }, leaders: 'sea' },
+    'Купеческий караван': { w: '3', a: '1 (по оружию)', m: '0',
+        h: 'Купец считает вьюки; при нём охрана и погонщики — численность и состав по обстановке. Имущество — по достатку купца («Что при человеке»).',
+        num: { k: 'manual', note: 'численность и состав по обстановке' }, tr: { k: 'human' } },
+    'Рыбаки': { w: '3', a: '1 (по оружию)', m: '0',
+        h: 'Ловят рыбу у берега; численность по обстановке. При себе — дневной заработок по достатку.',
+        num: { k: 'manual', note: 'численность по обстановке' }, tr: { k: 'human' } },
+    'Разъярённая толпа': { w: '3 (каждый участник)', a: '1 (дубины, вилы, копья; в большой толпе несколько лучников)', m: 'особая',
+        h: 'У ворот, на площади или у чьего-то дома собираются разгневанные жители (до сотни). Решите, кого ищут и чего требуют. Толпа наступает и отступает сообща; ударить могут те, кто дотягивается оружием. В ярости +2 к Броску Атаки. При виде заведомо превосходящей силы — сразу проверка Морали; первые потери только раззадоривают. Разбегается, когда из каждых пяти на ногах остался один; пока уверены, что берут верх, дерутся почти до конца — из каждых двадцати остаётся один.',
+        num: { k: 'manual', note: 'до сотни; по обстановке' }, tr: { k: 'human' } }
+};
+
+// Свита: призвание предводителя (к6) и размах (к6). Численность в пределах — выбор Рефери.
+const RETINUE2_CALLING = ['Воин', 'Воин', 'Воин', 'Служитель', 'Служитель', 'Заклинатель'];
+const RETINUE2_SCALE = [
+    { r: [1, 1], who: 'Правитель со своим двором', men: [100, 500], fantastic: [1, 20], companions: [0, 9] },
+    { r: [2, 3], who: 'Предводитель, прославленный по всей земле', men: [1, 100], fantastic: [1, 10], companions: [0, 7] },
+    { r: [4, 6], who: 'Герой, известный в здешних краях', men: [1, 10], fantastic: [1, 4], companions: [0, 3] }
+];
+
+// Драконы (приложение II, с. 39–40).
+const DRAGON2_AGES = [
+    { r: [2, 4], name: 'юный', wyrm: 9, great: 12, attacks: 1, cone: 30, freq: 'раз за бой', mult: 1 },
+    { r: [5, 9], name: 'взрослый', wyrm: 10, great: 13, attacks: 2, cone: 60, freq: 'раз в три раунда', mult: 3 },
+    { r: [10, 12], name: 'древний', wyrm: 11, great: 14, attacks: 3, cone: 100, freq: 'каждый раунд', mult: 6 }
+];
+const DRAGON2_HEAD = ['Баранья с витыми рогами', 'Верблюжья с рогами', 'Крокодилья', 'Слоновья', 'Как у саламандры', 'Змеиная'];
+const DRAGON2_SCALES = ['Зелёная', 'Броневые пластины', 'Красная', 'Золотая', 'Зелёная в броневых щитках', 'Красная в броневых щитках'];
+const DRAGON2_FEATURE = ['Панцирь на брюхе', 'Передние лапы тигра', 'Львиные лапы впереди, орлиные сзади', 'Раздвоенный хвост', 'Длинная змеиная шея', 'Перепончатые лапы, коровьи уши'];
+const DRAGON2_TEMPER = { 2: 'Трус', 3: 'Открытый', 4: 'Добрый', 5: 'Кровожадный', 6: 'Честный', 7: 'Любит приключения', 8: 'Обжора', 9: 'Остроумный', 10: 'Болтливый', 11: 'Вероломный', 12: 'Высокомерный' };
+const DRAGON2_GREED = [
+    { r: [2, 4], txt: 'делит добычу поровну и в крайней нужде расстанется с одной вещью из клада' },
+    { r: [5, 7], txt: 'требует прибавить к его доле десятую или пятую часть и после второго отказа нападает' },
+    { r: [8, 10], txt: 'сам берёт свою долю первым и нападает на того, кто к ней прикоснётся' },
+    { r: [11, 12], txt: 'требует всё и нападает уже на подступах к логову' }
+];
+const DRAGON2_INTEREST = { 2: 'магические предметы', 3: 'книги', 4: 'оружие и доспехи', 5: 'изделия мастеров', 6: 'древности и карты', 7: 'редкие живые существа', 8: 'изысканная еда', 9: 'любовь и ухаживание' };
+const DRAGON2_LAIR = [
+    { r: [2, 8], txt: 'пещера' },
+    { r: [9, 9], txt: 'открытое гнездо в горах' },
+    { r: [10, 10], txt: 'потухший вулкан' },
+    { r: [11, 12], txt: 'руины храма или дворца' }
+];
+const DRAGON2_SPECIES = [
+    { id: 'wyrm', name: 'Вирм' },
+    { id: 'great', name: 'Великий вирм' },
+    { id: 'lindwurm', name: 'Линдвурм' },
+    { id: 'lun', name: 'Лун' },
+    { id: 'gorynych', name: 'Змей Горыныч' },
+    { id: 'skola', name: 'Ско’ла' }
+];
+
+function dragonAgeOf(sum) {
+    for (let i = 0; i < DRAGON2_AGES.length; i++) {
+        const a = DRAGON2_AGES[i];
+        if (sum >= a.r[0] && sum <= a.r[1]) return a;
+    }
+    return DRAGON2_AGES[0];
+}
+function rangeOf(list, v) {
+    for (let i = 0; i < list.length; i++) if (v >= list[i].r[0] && v <= list[i].r[1]) return list[i];
+    return list[list.length - 1];
+}
+
+// Полный расчёт дракона. species: wyrm/great/lindwurm/lun/gorynych/skola.
+// Один возрастной бросок задаёт ранения, атаки, дыхание и множитель клада.
+function genDragon2(species, heads) {
+    const d = { species: species, rolls: [] };
+    if (species === 'skola') {
+        d.age = { name: 'древний (840 лет)', mult: 6 };
+        d.wounds = 14; d.attacks = 3; d.cone = 110; d.freq = 'каждый раунд (огонь Ско’лы достаёт на 110 м)';
+        d.head = 'Крокодилья'; d.scales = null; d.feature = 'Панцирь на брюхе, раздвоенный хвост, тигриные лапы, змеиная шея';
+        d.wings = true; d.gift = true; d.temper = ['Храбр', 'Высокомерный'];
+        d.greed = DRAGON2_GREED[0].txt; d.interest = null;
+        d.lair = 'пещера'; d.morale = '+1';
+        d.vuln = 'Брюхо закрыто панцирем; древнего ранит только магическое оружие или магия.';
+        return d;
+    }
+    const great = (species === 'great' || species === 'gorynych');
+    const a1 = roll(6), a2 = roll(6);
+    d.ageRoll = [a1, a2]; d.ageSum = a1 + a2;
+    d.age = dragonAgeOf(d.ageSum);
+    d.wounds = great ? d.age.great : d.age.wyrm;
+    d.attacks = d.age.attacks; d.cone = d.age.cone; d.freq = d.age.freq;
+    d.morale = '0';
+    if (species === 'gorynych') {
+        d.heads = heads || 3;
+        d.attacks = d.heads;
+        d.attacksNote = 'по одной на каждую голову (укус или дыхание); число голов определяет Рефери';
+    }
+    const hr = roll(6), sr = roll(6), fr = roll(6);
+    d.headRoll = hr; d.head = DRAGON2_HEAD[hr - 1];
+    d.scalesRoll = sr; d.scales = DRAGON2_SCALES[sr - 1];
+    d.featureRoll = fr; d.feature = DRAGON2_FEATURE[fr - 1];
+    const wr = roll(6);
+    d.wingsRoll = wr; d.wings = wr >= 3;
+    const gr = roll(6);
+    d.giftRoll = gr;
+    if (species === 'lun' || species === 'gorynych') d.gift = gr === 1;
+    else d.gift = gr <= 2;
+    // Нрав: 2к6 трижды, повторы перебрасываются.
+    d.temper = []; d.temperRolls = [];
+    let guard = 0;
+    while (d.temper.length < 3 && guard < 200) {
+        const t1 = roll(6), t2 = roll(6), s = t1 + t2;
+        guard++;
+        if (d.temper.indexOf(DRAGON2_TEMPER[s]) < 0) { d.temper.push(DRAGON2_TEMPER[s]); d.temperRolls.push(s); }
+    }
+    const g1 = roll(6), g2 = roll(6);
+    d.greedRoll = g1 + g2; d.greed = rangeOf(DRAGON2_GREED, d.greedRoll).txt;
+    const i1 = roll(6), i2 = roll(6);
+    d.interestRoll = i1 + i2;
+    d.interest = d.interestRoll >= 10 ? null : DRAGON2_INTEREST[d.interestRoll];
+    d.interestTwo = d.interestRoll >= 10;
+    const l1 = roll(6), l2 = roll(6);
+    d.lairRoll = l1 + l2; d.lair = rangeOf(DRAGON2_LAIR, d.lairRoll).txt;
+    const belly = d.feature === 'Панцирь на брюхе';
+    if (d.age.name === 'древний') d.vuln = 'Древнего ранит только магическое оружие или магия.';
+    else if (belly) d.vuln = 'Брюхо закрыто панцирем — уязвимого места нет; простой клинок скользит по чешуе.';
+    else d.vuln = 'Простой клинок скользит по чешуе, но брюхо лишено панциря — можно добраться до уязвимого места.';
+    if (species === 'lun') d.vuln += ' Обычное оружие луна не берёт.';
+    if (species === 'gorynych') d.vuln += ' Обычное оружие Горыныча не берёт; отсечённая голова отрастает, если шею вовремя не прижечь.';
+    if (species === 'lindwurm') d.extra = 'Часто безногий; крылатый стремительно летает, бескрылый так же быстро плавает.';
+    if (species === 'lun') d.extra = 'Многие луны говорят и принимают облик людей и зверей.';
+    return d;
+}
+
+// Состояние логова при визите отряда (бросается только при появлении отряда).
+function dragonVisit2() {
+    const r = roll(6);
+    if (r === 1) { const t = roll(6); return { roll: r, txt: 'вирм вернётся через ' + t + ' ходов (к6 = ' + t + ')' }; }
+    if (r <= 4) return { roll: r, txt: 'вирм спит' };
+    return { roll: r, txt: 'вирм бодрствует' };
+}
+/* ================= TREASURE 2.0 (приложение IV, с. 118–124) ================= */
+// Все расчёты — в целой бронзе: 1 зол. = 100 сер. = 10 000 бронз.
+
+const CACHE2 = [
+    ['Б', 'Б', 'Б', 'Б', 'Б + С', 'Б'],
+    ['Б', '2Б', 'Б', 'Б + Т', 'Б + С', 'Б'],
+    ['Б', 'Б', '2Б', 'Б + С', 'С', 'С'],
+    ['Б', 'Б + С', 'С', '2С', 'С + К', 'Т'],
+    ['Б', 'С', 'К', 'З', 'З + К', 'Ещё 2'],
+    ['Б + П', 'Б', 'С', 'З', 'Ещё 2', 'Ещё 3']
+];
+
+// Разбор клетки тайника. Первая кость — столбец, вторая — строка.
+function parseCache2(cell) {
+    const p = { b: 0, s: 0, g: 0, gems: false, thing: false, magic: false, more: 0 };
+    if (cell.indexOf('Ещё') === 0) { p.more = parseInt(cell.slice(4)); return p; }
+    cell.split('+').forEach(function (partRaw) {
+        const part = partRaw.trim();
+        if (part === 'К') { p.gems = true; return; }
+        if (part === 'Т') { p.thing = true; return; }
+        if (part === 'П') { p.magic = true; return; }
+        const m = part.match(/^(2)?([БСЗ])$/);
+        if (!m) return;
+        const mult = m[1] ? 2 : 1;
+        if (m[2] === 'Б') p.b = mult;
+        else if (m[2] === 'С') p.s = mult;
+        else p.g = mult;
+    });
+    return p;
+}
+
+// Монеты: каждая выпавшая шестёрка = 0; произведение; для С и Б ещё ×30.
+function cacheCoins2(col, row, parsed) {
+    const c = col === 6 ? 0 : col;
+    const r = row === 6 ? 0 : row;
+    const prod = c * r;
+    return { bronze: prod * 30 * parsed.b, silver: prod * 30 * parsed.s, gold: prod * parsed.g };
+}
+
+const GEM2_TYPES = [
+    { r: [1, 3], name: 'рубин', per: 100 },
+    { r: [4, 5], name: 'изумруд', per: 200 },
+    { r: [6, 6], name: 'алмаз', per: 500 }
+];
+// Камни: к6 на вид (3:2:1), к6 на цену; 1 — изъян без выручки, иначе (грань−1)×100/200/500 сер.
+function rollGem2() {
+    const tr = roll(6), pr = roll(6);
+    const type = rangeOf(GEM2_TYPES, tr);
+    const flaw = pr === 1;
+    const silver = flaw ? 0 : (pr - 1) * type.per;
+    return { typeRoll: tr, type: type.name, priceRoll: pr, flaw: flaw, silver: silver, bronze: silver * 100 };
+}
+
+// Прочие сокровища: к6 на столбец, к3 на строку (повторяющиеся клетки сохранены).
+const THING2_TABLE = [
+    ['Гобелен', 'Бочонок', 'Утварь', 'Оружие', 'Седло', 'Одежда'],
+    ['Скульптура', 'Картина', 'Мебель', 'Бивень', 'Бочонок', 'Утварь'],
+    ['Одежда', 'Седло', 'Гобелен', 'Скульптура', 'Картина', 'Мебель']
+];
+const THING2_BASE = { 2: 1, 3: 5, 4: 10, 5: 25, 6: 50, 7: 100, 8: 500, 9: 1000, 10: 2500, 11: 5000 };
+const THING2_LOAD = { 'Гобелен': 2, 'Скульптура': 4, 'Одежда': 1, 'Бочонок': 2, 'Картина': 2, 'Седло': 2, 'Утварь': 1, 'Мебель': 4, 'Оружие': 1, 'Бивень': 3 };
+const BARREL2 = [
+    { r: [2, 2], txt: 'духи', silver: null, dice: [2, 6, 5] },
+    { r: [3, 3], txt: 'амбра', silver: 200 },
+    { r: [4, 4], txt: 'пряности', silver: 100 },
+    { r: [5, 6], txt: 'соль', silver: 10 },
+    { r: [7, 8], txt: 'вино', silver: null, dice: [1, 6, 1] },
+    { r: [9, 9], txt: 'эль', silver: 1 },
+    { r: [10, 10], txt: 'медь', silver: 1 },
+    { r: [11, 11], txt: 'железо', silver: null, bronze: 4 },
+    { r: [12, 12], txt: 'духи', silver: null, dice: [1, 6, 15] }
+];
+
+function rollThing2() {
+    const cr = roll(6), rr = roll(3);
+    const kind = THING2_TABLE[rr - 1][cr - 1];
+    const t = { kind: kind, colRoll: cr, rowRoll: rr, load: THING2_LOAD[kind], rolls: [] };
+    if (kind === 'Бивень') {
+        const r = roll(6);
+        t.baseTxt = 'к6 × 100 сер. (к6 = ' + r + ')';
+        t.bronze = r * 100 * 100;
+        t.finalBronze = t.bronze;
+        return t;
+    }
+    if (kind === 'Бочонок') {
+        const s = rollSum(2, 6);
+        const b = rangeOf(BARREL2, s);
+        t.baseTxt = '2к6 = ' + s + ' → ' + b.txt;
+        if (b.dice) {
+            const v = rollSum(b.dice[0], b.dice[1]) * b.dice[2];
+            t.bronze = v * 100;
+            t.baseTxt += ' (' + b.dice[0] + 'к6 × ' + b.dice[2] + ' сер. = ' + v + ' сер.)';
+        } else if (b.bronze) {
+            t.bronze = b.bronze;
+            t.baseTxt += ' (' + b.bronze + ' бронз.)';
+        } else {
+            t.bronze = b.silver * 100;
+            t.baseTxt += ' (' + b.silver + ' сер.)';
+        }
+        t.finalBronze = t.bronze;
+        return t;
+    }
+    const bs = rollSum(2, 6);
+    let base;
+    if (bs === 12) {
+        const r = roll(6);
+        base = (r <= 3 ? 100 : (r <= 5 ? 200 : 500)) * 100;
+        t.baseTxt = '2к6 = 12 → к6 = ' + r + ' → ' + (base / 100) + ' сер.';
+    } else {
+        base = THING2_BASE[bs];
+        t.baseTxt = '2к6 = ' + bs + ' → ' + (base < 100 ? base + ' бронз.' : (base / 100) + ' сер.');
+    }
+    t.baseBronze = base;
+    t.bronze = base;
+    if (kind === 'Гобелен' || kind === 'Скульптура') {
+        const r = roll(6);
+        let mult = Math.max(1, 2 * (r - 1));
+        t.multTxt = '2 × (к6 − 1), к6 = ' + r + ' → ×' + mult;
+        if (kind === 'Скульптура' && r === 5) {
+            const r3 = roll(3);
+            t.multTxt += '; к3 = ' + r3 + (r3 === 3 ? ' → множитель 9' : '');
+            if (r3 === 3) mult = 9;
+        }
+        t.mult = mult;
+    } else if (kind === 'Картина') {
+        const s = rollSum(2, 6);
+        const mult = Math.max(2, 2 * (s - 2));
+        t.mult = mult;
+        t.multTxt = '2 × (2к6 − 2), 2к6 = ' + s + ' → ×' + mult;
+    } else if (kind === 'Утварь' || kind === 'Мебель') {
+        const r = roll(6);
+        const mult = r <= 2 ? 1 : (r <= 4 ? 2 : (r === 5 ? 3 : 4));
+        t.mult = mult;
+        t.multTxt = 'к6 = ' + r + ' → ×' + mult;
+    } else if (kind === 'Оружие') {
+        const r = roll(3);
+        t.weapon = r === 1 ? 'кинжал' : (r === 2 ? 'меч' : 'топор');
+        t.mult = 0.5;
+        t.multTxt = 'половина базовой цены; к3 = ' + r + ' → ' + t.weapon;
+    } else {
+        t.mult = 1;
+        t.multTxt = 'базовая цена (седло со сбруей или одежда)';
+    }
+    t.finalBronze = Math.round(t.baseBronze * t.mult);
+    // Волшебные находки (порог в серебряных).
+    const silver = t.finalBronze / 100;
+    if (kind === 'Гобелен' && silver >= 5000) t.magicNote = 'Волшебный гобелен: остаётся чёрным, пока свёрнут; повешенный в доме показывает, что случится с хозяином через час.';
+    if (kind === 'Картина' && silver >= 9000) t.magicNote = 'Картина с проходом в изображённый мир (видит Заклинатель; прочие — спасбросок от чар, провал: исчезает в картине). Рефери заранее решает, куда ведёт проход и откуда можно вернуться.';
+    if (kind === 'Скульптура' && silver >= 4500) {
+        const cr2 = roll(6);
+        const cult = cr2 <= 2 ? '«светлый» культ' : (cr2 === 3 ? 'нейтральная сила' : (cr2 === 4 ? 'нет отношения к силам' : '«тёмный» культ'));
+        t.magicNote = silver >= 5000
+            ? 'Статуя божества (' + cult + ', к6 = ' + cr2 + '). Приблизившийся на 3 м делает спасбросок от великих чар; при провале — к6 по таблице статуи (приложение IV).'
+            : 'Статуя малой силы (' + cult + ', к6 = ' + cr2 + '). Приблизившийся на 3 м делает спасбросок от сильных чар; при провале — к6 по таблице статуи (приложение IV).';
+    }
+    return t;
+}
+
+// «П»: к6 — категория магического предмета; продолжение — в своём разделе приложения IV.
+const MAGIC2_CATS = ['Меч', 'Меч', 'Доспех или щит', 'Амулет', 'Талисман', 'Артефакт кампании'];
+function rollMagic2() {
+    const r = roll(6);
+    return { roll: r, cat: MAGIC2_CATS[r - 1] };
+}
+
+// Один тайник. depth 0 — исходный; дочерние «Ещё» означают разграбленный тайник.
+function rollCache2(depth) {
+    const col = roll(6), row = roll(6);
+    const cell = CACHE2[row - 1][col - 1];
+    const parsed = parseCache2(cell);
+    const res = { col: col, row: row, cell: cell, depth: depth || 0, looted: false, coins: { bronze: 0, silver: 0, gold: 0 }, gems: [], things: [], magic: [], children: [] };
+    if (parsed.more > 0 && res.depth > 0) {
+        res.looted = true;
+        return res;
+    }
+    res.coins = cacheCoins2(col, row, parsed);
+    if (parsed.gems) { const n = rollSum(2, 6); res.gemRoll = n; for (let i = 0; i < n; i++) res.gems.push(rollGem2()); }
+    if (parsed.thing) res.things.push(rollThing2());
+    if (parsed.magic) res.magic.push(rollMagic2());
+    if (parsed.more > 0) {
+        for (let i = 0; i < parsed.more; i++) res.children.push(rollCache2(res.depth + 1));
+    }
+    return res;
+}
+
+// Клад юного дракона (базовый), количества умножаются на возрастной множитель.
+// Диапазоны 1–10 автоматизированы равномерным к10 (предложение плана).
+function rollDragonHoard2(mult) {
+    const h = { mult: mult, gold: 0, silver: 0, gems: [], jewelry: 0, things: 0, magic: [], books: 0, rolls: {} };
+    const g = roll(6); h.rolls.gold = g; h.gold = g * 1000 * mult;
+    const s = roll(10); h.rolls.silver = s; h.silver = s * 1000 * mult;
+    const gn = roll(3); h.rolls.gems = gn;
+    for (let i = 0; i < gn * mult; i++) h.gems.push(rollGem2());
+    const j = roll(6); h.rolls.jewelry = j; h.jewelry = j * mult;
+    const t = roll(10); h.rolls.things = t; h.things = t * mult;
+    const mr = roll(6); h.rolls.magic = mr;
+    if (mr >= 5) for (let i = 0; i < mult; i++) h.magic.push(rollMagic2());
+    const br = roll(6); h.rolls.book = br;
+    if (br >= 4) h.books = mult;
+    return h;
+}
+
+// Фиксированный клад Ско’лы (статья): окончательные количества.
+function skolaHoard2() {
+    const h = { fixed: true, mult: 1, gold: 56000, silver: 168000, gems: [], jewelry: 0, things: 252, magic: [], books: 0, rolls: {} };
+    for (let i = 0; i < 28; i++) h.gems.push(rollGem2());
+    for (let i = 0; i < 28; i++) h.magic.push(rollMagic2());
+    return h;
+}
+
+// Что при человеке (с. 120). Доход в серебряных; дневная доля = 1/30 месячного.
+const INCOME2 = [
+    { r: [2, 5], who: 'Подёнщик, слуга', monthly: 6, magicOn: [12, 12] },
+    { r: [6, 8], who: 'Опытный работник, вооружённый спутник', monthly: 18, magicOn: [12, 12] },
+    { r: [9, 11], who: 'Мастер, купец, управляющий', monthly: 60, magicOn: [11, 12] },
+    { r: [12, 12], who: 'Землевладелец, богатый торговец', monthly: 300, magicOn: [10, 12] }
+];
+function rollIncome2() {
+    const a = roll(6), b = roll(6);
+    const tier = rangeOf(INCOME2, a + b);
+    return { roll: [a, b], sum: a + b, tier: tier };
+}
+// ctx: journey — дальняя дорога (2к6 дневных), local — по местным делам (к6 дневных),
+// home — дома (к6 месячных), both — дома и при себе (дорожные деньги вычитаются).
+function humanMoney2(monthly, ctx) {
+    const daily = monthly / 30;
+    const out = { monthly: monthly, daily: daily, ctx: ctx };
+    if (ctx === 'home' || ctx === 'both') {
+        const r = roll(6);
+        out.homeRoll = r;
+        out.home = r * monthly;
+    }
+    if (ctx === 'journey' || ctx === 'local' || ctx === 'both') {
+        const n = ctx === 'local' ? 1 : 2;
+        const r = rollSum(n, 6);
+        out.travelRoll = r; out.travelDice = n;
+        out.travelExact = r * daily;
+        out.travel = Math.round(r * daily);
+    }
+    if (ctx === 'both') out.homeAfter = out.home - out.travel;
+    return out;
+}
+function humanMagic2(tier) {
+    const a = roll(6), b = roll(6), s = a + b;
+    const ok = s >= tier.magicOn[0] && s <= tier.magicOn[1];
+    const res = { roll: [a, b], sum: s, need: tier.magicOn[0] === tier.magicOn[1] ? String(tier.magicOn[0]) : tier.magicOn[0] + '–' + tier.magicOn[1], ok: ok };
+    if (ok) res.item = rollMagic2();
+    return res;
+}
+
+// Продажа: житель поселения — ½, городской купец/мастер — ¾, заказчик — полная цена после доставки.
+// Выручка округляется вниз до целой бронзовой.
+const BUYERS2 = [
+    { id: 'local', name: 'Житель поселения (вещь, которой сам пользуется)', frac: 0.5 },
+    { id: 'city', name: 'Купец или мастер в городе (товар своего ремесла)', frac: 0.75 },
+    { id: 'client', name: 'Заказчик, которому нужна именно эта вещь (после доставки)', frac: 1 }
+];
+function saleBronze2(appraisedBronze, frac) { return Math.floor(appraisedBronze * frac); }
+
+// Итоговая ведомость по всем частям добычи.
+function ledger2(parts) {
+    const L = { bronze: 0, silver: 0, gold: 0, gems: { count: 0, bronze: 0 }, things: { count: 0, bronze: 0, load: 0 }, magic: { count: 0, cats: {} }, jewelry: 0, books: 0, valuables: [], unpriced: [], appraisedBronze: 0 };
+    function addCoins(c) { L.bronze += c.bronze; L.silver += c.silver; L.gold += c.gold; }
+    function addGem(g) { L.gems.count++; L.gems.bronze += g.bronze; }
+    function addThing(t) {
+        L.things.count++;
+        if (t.finalBronze != null) { L.things.bronze += t.finalBronze; L.things.load += t.load || 0; }
+        else L.unpriced.push(t.txt || 'вещь');
+    }
+    function addMagic(m) { L.magic.count++; L.magic.cats[m.cat] = (L.magic.cats[m.cat] || 0) + 1; }
+    function walkCache(c) {
+        if (c.looted) return;
+        addCoins(c.coins);
+        c.gems.forEach(addGem);
+        c.things.forEach(addThing);
+        c.magic.forEach(addMagic);
+        c.children.forEach(walkCache);
+    }
+    parts.forEach(function (p) {
+        if (p.kind === 'cache') walkCache(p.data);
+        else if (p.kind === 'hoard') {
+            const h = p.data;
+            L.silver += h.silver; L.gold += h.gold;
+            h.gems.forEach(addGem);
+            L.jewelry += h.jewelry;
+            if (h.things > 0) L.unpriced.push(h.things + ' прочих ценностей (клад дракона)');
+            h.magic.forEach(addMagic);
+            L.books += h.books;
+        } else if (p.kind === 'coins') addCoins(p.data);
+        else if (p.kind === 'gems') p.data.forEach(addGem);
+        else if (p.kind === 'thing') addThing(p.data);
+        else if (p.kind === 'magic') addMagic(p.data);
+        else if (p.kind === 'valuable') { L.valuables.push({ txt: p.txt, bronze: p.bronze }); L.appraisedBronze += p.bronze; }
+        else if (p.kind === 'unpriced') L.unpriced.push(p.txt);
+    });
+    L.coinEqBronze = L.bronze + 100 * L.silver + 10000 * L.gold;
+    L.appraisedBronze += L.gems.bronze + L.things.bronze;
+    return L;
+}
+
+/* ================= TRAVEL & ENCOUNTER FLOW 2.0 ================= */
+
+const TRAVEL2 = [
+    { id: 'foot', name: 'Пешком', base: 2 },
+    { id: 'cart', name: 'Телега / повозка', base: 3 },
+    { id: 'horse', name: 'Верхом на лошади', base: 4 },
+    { id: 'boatDown', name: 'Лодка по течению', base: 4 },
+    { id: 'boatUp', name: 'Лодка против течения', base: 2 }
+];
+const PASS2 = [
+    { id: 'open', name: 'Открытая местность', thr: [6], txt: '6 на к6 (1/6)' },
+    { id: 'broken', name: 'Пересечённая местность', thr: [5, 6], txt: '5–6 на к6 (1/3)' },
+    { id: 'difficult', name: 'Труднопроходимая (густой лес, болото, горы)', thr: [4, 5, 6], txt: '4–6 на к6 (1/2)' }
+];
+function travelSpeed2(methodId, passId, road) {
+    const m = TRAVEL2.filter(function (x) { return x.id === methodId; })[0] || TRAVEL2[0];
+    const slow = passId === 'difficult' && !road;
+    return { base: m.base, slow: slow, speed: slow ? Math.floor(m.base / 2) : m.base, name: m.name };
+}
+function timeOfDay2(r) { return r <= 2 ? 'утро' : (r <= 4 ? 'день' : 'вечер или ночь'); }
+
+let enc2State = null;
+
+// Разбор ячейки встречи. Возвращает шаги бросков и обитателя либо ожидающий выбор.
+function resolveCell2(colId, sum, time) {
+    const cell = ENC2_TABLES[colId][sum];
+    const st = { cell: cell, extra: null, pending: null, inhabitant: null };
+    if (cell.t === 'one') {
+        st.inhabitant = cell.c;
+        st.note = cell.note || null;
+    } else if (cell.t === 'pair') {
+        const r = roll(6);
+        st.extra = { kind: 'pair', roll: r };
+        st.inhabitant = r <= 3 ? cell.a : cell.b;
+    } else if (cell.t === 'd6') {
+        const r = roll(6);
+        st.extra = { kind: 'd6', roll: r };
+        let opt = null;
+        for (let i = 0; i < cell.o.length; i++) if (r >= cell.o[i].r[0] && r <= cell.o[i].r[1]) opt = cell.o[i];
+        st.opt = opt;
+        if (opt.choice) st.pending = { kind: 'choice', options: opt.choice, base: opt.c };
+        else { st.inhabitant = opt.c; st.note = opt.note || null; }
+    } else if (cell.t === 'cond') {
+        st.pending = { kind: 'cond', options: cell.o };
+    } else if (cell.t === 'time') {
+        if (time === 'утро' || time === 'день') st.inhabitant = cell.day;
+        else if (time === 'вечер или ночь') st.pending = { kind: 'choice', options: [cell.night, cell.day], base: 'Гоблин ночью, Фейри днём', twilight: true };
+        else st.pending = { kind: 'choice', options: [cell.night, cell.day], base: 'Гоблин ночью, Фейри днём' };
+    } else if (cell.t === 'sub') {
+        const r = roll(6);
+        st.extra = { kind: 'sub', roll: r };
+        st.subOn = false;
+        st.inhabitant = cell.c;
+    }
+    return st;
+}
+
+function inhabitantInfo2(name) {
+    if (ENC2_ALIAS[name]) {
+        const a = ENC2_ALIAS[name];
+        if (a[0] === 'Дракон') return { kind: 'dragon', species: a[1] === 'вирм' ? 'wyrm' : 'great', display: name };
+        if (BESTIARY2[a[0]] && BESTIARY2[a[0]].dragon) return { kind: 'dragon', species: BESTIARY2[a[0]].dragon, display: name };
+        return { kind: 'creature', key: a[0], variant: a[1], display: name };
+    }
+    if (BESTIARY2[name]) {
+        if (BESTIARY2[name].dragon) return { kind: 'dragon', species: BESTIARY2[name].dragon, display: name };
+        return { kind: 'creature', key: name, variant: null, display: name };
+    }
+    if (HUMAN2[name]) return { kind: 'human', key: name, display: name };
+    if (name.indexOf('Человек') === 0) return { kind: 'human', key: 'Человек', display: name };
+    return { kind: 'manual', display: name };
+}
+/* ================= ENCOUNTER UI 2.0 ================= */
+
+function enc2El(id) { return document.getElementById(id); }
+function fmtBronze2(n) {
+    const g = Math.floor(n / 10000), s = Math.floor((n % 10000) / 100), b = n % 100;
+    const parts = [];
+    if (g) parts.push(fmtNum(g) + ' зол.');
+    if (s) parts.push(fmtNum(s) + ' сер.');
+    if (b || !parts.length) parts.push(fmtNum(b) + ' бронз.');
+    return parts.join(' ');
+}
+function esc2(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+function gemLine2(g) {
+    return g.type + ' (вид к6 = ' + g.typeRoll + ', цена к6 = ' + g.priceRoll + '): ' + (g.flaw ? '<b>изъян</b> — ювелир денег не даст' : '<b>' + fmtNum(g.silver) + ' сер.</b>');
+}
+function thingLine2(t) {
+    let s = '<b>' + t.kind + (t.weapon ? ' (' + t.weapon + ')' : '') + '</b> — столбец к6 = ' + t.colRoll + ', строка к3 = ' + t.rowRoll + '. ' + t.baseTxt;
+    if (t.multTxt) s += '. Множитель: ' + t.multTxt;
+    s += '. Итог: <b>' + fmtBronze2(t.finalBronze) + '</b>, нагрузка ' + t.load + ' ' + (t.load === 1 ? 'место' : (t.load >= 2 && t.load <= 4 ? 'места' : 'мест')) + (t.kind === 'Мебель' ? ' (несут вдвоём)' : '') + '.';
+    if (t.magicNote) s += '<br><span class="muted">' + t.magicNote + '</span>';
+    return s;
+}
+function magicLine2(m) { return 'к6 = ' + m.roll + ' → <b>' + m.cat + '</b> <span class="muted">(свойства — в разделе «' + (m.cat === 'Меч' ? 'Мечи' : (m.cat === 'Доспех или щит' ? 'Доспехи и щиты' : (m.cat === 'Амулет' || m.cat === 'Талисман' ? 'Амулеты и талисманы' : 'Артефакты кампании'))) + '» приложения IV)</span>'; }
+
+function cacheHtml2(c, idx) {
+    if (c.looted) {
+        return '<details class="enc-cache"><summary>Тайник ' + idx + ': столбец ' + c.col + ', строка ' + c.row + ' → «' + c.cell + '» — <b>разграблен</b></summary><div class="muted">Повторное «Ещё» в дополнительном тайнике: от прежнего содержимого могли остаться труха, черепки или пустой кошель.</div></details>';
+    }
+    const lines = [];
+    const coins = [];
+    if (c.coins.bronze) coins.push(fmtNum(c.coins.bronze) + ' бронз.');
+    if (c.coins.silver) coins.push(fmtNum(c.coins.silver) + ' сер.');
+    if (c.coins.gold) coins.push(fmtNum(c.coins.gold) + ' зол.');
+    lines.push('Монеты: ' + (coins.length ? '<b>' + coins.join(', ') + '</b>' : 'нет') + ' <span class="muted">(столбец ' + c.col + (c.col === 6 ? ' → 0' : '') + ', строка ' + c.row + (c.row === 6 ? ' → 0' : '') + ')</span>');
+    if (c.gems.length) lines.push('Камни (2к6 = ' + c.gemRoll + '):<br>' + c.gems.map(gemLine2).join('<br>'));
+    c.things.forEach(function (t) { lines.push(thingLine2(t)); });
+    c.magic.forEach(function (m) { lines.push('Магический предмет: ' + magicLine2(m)); });
+    if (!coins.length && !c.gems.length && !c.things.length && !c.magic.length) lines.push('<span class="muted">Тайник пуст.</span>');
+    let html = '<details class="enc-cache"><summary>Тайник ' + idx + ': столбец ' + c.col + ', строка ' + c.row + ' → «' + c.cell + '»</summary><div>' + lines.join('<br>') + '</div>';
+    c.children.forEach(function (ch, i) { html += cacheHtml2(ch, idx + '.' + (i + 1)); });
+    html += '</details>';
+    return html;
+}
+
+function hoardHtml2(h, title) {
+    const lines = [];
+    lines.push('Монеты: <b>' + fmtNum(h.gold) + ' зол., ' + fmtNum(h.silver) + ' сер.</b>');
+    if (h.gems.length) lines.push('Камни (' + h.gems.length + '):<br>' + h.gems.map(gemLine2).join('<br>'));
+    if (h.jewelry) lines.push('Украшения: <b>' + h.jewelry + '</b> <span class="muted">(цена не определена)</span>');
+    if (h.things) lines.push('Прочие ценности: <b>' + h.things + '</b> <span class="muted">(цена не определена; тематические вещи Рефери добавляет по интересам дракона)</span>');
+    if (h.magic.length) lines.push('Магические предметы (' + h.magic.length + '):<br>' + h.magic.map(magicLine2).join('<br>'));
+    lines.push('Книги: <b>' + h.books + '</b>');
+    if (!h.fixed) {
+        const r = h.rolls;
+        lines.push('<span class="muted">Базовый клад юного: к6 = ' + r.gold + ' → ' + fmtNum(r.gold * 1000) + ' зол.; к10 = ' + r.silver + ' → ' + fmtNum(r.silver * 1000) + ' сер.; к3 = ' + r.gems + ' камней; к6 = ' + r.jewelry + ' украшений; к10 = ' + r.things + ' прочих ценностей; магия к6 = ' + r.magic + (r.magic >= 5 ? ' (есть)' : ' (нет)') + '; книга к6 = ' + r.book + (r.book >= 4 ? ' (есть)' : ' (нет)') + '. Возрастной множитель ×' + h.mult + ' применён к количествам каждого вида.</span>');
+    } else {
+        lines.push('<span class="muted">Состав перенесён из статьи Ско’лы: окончательные количества.</span>');
+    }
+    return '<details class="enc-cache" open><summary>' + title + '</summary><div>' + lines.join('<br>') + '</div></details>';
+}
+
+function humanHtml2(m, magic, incomeInfo) {
+    const lines = [];
+    if (incomeInfo) lines.push('Доход неизвестен: 2к6 = ' + incomeInfo.roll[0] + ' + ' + incomeInfo.roll[1] + ' = <b>' + incomeInfo.sum + '</b> → ' + incomeInfo.tier.who + ', <b>' + incomeInfo.tier.monthly + ' сер./мес.</b>');
+    else lines.push('Доход известен: <b>' + m.monthly + ' сер./мес.</b> (дневная доля ' + (Math.round(m.daily * 100) / 100) + ' сер.)');
+    if (m.home != null) lines.push('Дома: к6 = ' + m.homeRoll + ' × месячный доход = <b>' + fmtNum(m.home) + ' сер.</b>');
+    if (m.travel != null) lines.push('При себе (' + (m.ctx === 'local' ? 'по местным делам, к6' : 'дальняя дорога, 2к6') + ' = ' + m.travelRoll + '): ' + m.travelRoll + ' × ' + (Math.round(m.daily * 100) / 100) + ' = ' + (Math.round(m.travelExact * 100) / 100) + ' → округлённо <b>' + fmtNum(m.travel) + ' сер.</b>');
+    if (m.homeAfter != null) lines.push('Обыск дома и владельца: дорожные деньги вычтены — дома остаётся <b>' + fmtNum(m.homeAfter) + ' сер.</b>');
+    if (magic) {
+        lines.push('Магический предмет при человеке: 2к6 = <b>' + magic.sum + '</b> (нужно ' + magic.need + ') → ' + (magic.ok ? '<b>есть</b>: ' + magicLine2(magic.item) : 'нет'));
+    }
+    lines.push('<span class="muted">Описанная реликвия имеет приоритет: если она уже при человеке, бросок не нужен. Вожаку разбойников, зажиточному владельцу повозок или капитану — строка по действительному достатку.</span>');
+    return lines.join('<br>');
+}
+
+function ledgerHtml2(L) {
+    const lines = [];
+    const coins = [];
+    if (L.bronze) coins.push(fmtNum(L.bronze) + ' бронз.');
+    if (L.silver) coins.push(fmtNum(L.silver) + ' сер.');
+    if (L.gold) coins.push(fmtNum(L.gold) + ' зол.');
+    lines.push('<b>Итог по всем тайникам</b>');
+    lines.push('Монеты: ' + (coins.length ? '<b>' + coins.join(', ') + '</b>' : 'нет') + ' <span class="muted">(эквивалент ' + fmtNum(L.coinEqBronze) + ' бронз.)</span>');
+    lines.push('Камни: <b>' + L.gems.count + '</b>, оценка ' + fmtBronze2(L.gems.bronze));
+    lines.push('Прочие вещи: <b>' + L.things.count + '</b>, оценка ' + fmtBronze2(L.things.bronze) + ', нагрузка ' + L.things.load + ' мест');
+    const cats = Object.keys(L.magic.cats).map(function (k) { return k + ' ×' + L.magic.cats[k]; });
+    lines.push('Магические предметы: <b>' + L.magic.count + '</b>' + (cats.length ? ' (' + cats.join(', ') + ')' : '') + ' <span class="muted">(цена не определена)</span>');
+    if (L.jewelry) lines.push('Украшения: <b>' + L.jewelry + '</b> <span class="muted">(цена не определена)</span>');
+    if (L.books) lines.push('Книги: <b>' + L.books + '</b>');
+    L.valuables.forEach(function (v) { lines.push('Ценность по статье: <b>' + v.txt + '</b> — ' + fmtBronze2(v.bronze)); });
+    L.unpriced.forEach(function (u) { lines.push('<span class="muted">Цена не определена: ' + u + '</span>'); });
+    lines.push('Оценка предметов с известной ценой (отдельно от монет): <b>' + fmtBronze2(L.appraisedBronze) + '</b>');
+    lines.push('<label>Продажа: <select id="encBuyer" onchange="enc2Sale(this.value)">' + BUYERS2.map(function (b) { return '<option value="' + b.id + '">' + b.name + '</option>'; }).join('') + '</select></label> <span id="encSaleOut" class="muted">выберите покупателя — выручка округляется вниз до целой бронзовой; пока груз ждёт в подземелье или на складе, денег персонажи не получили.</span>');
+    return lines.join('<br>');
+}
+
+function dragonCard2(d) {
+    const spName = { wyrm: 'Дракон (вирм)', great: 'Дракон (великий вирм)', lindwurm: 'Линдвурм', lun: 'Лун', gorynych: 'Змей Горыныч', skola: 'Ско’ла' }[d.species];
+    const lines = [];
+    lines.push('<b>' + spName + '</b> · Мораль ' + d.morale);
+    if (d.ageRoll) lines.push('Возраст: 2к6 = ' + d.ageRoll[0] + ' + ' + d.ageRoll[1] + ' = <b>' + d.ageSum + '</b> → <b>' + d.age.name + '</b>.');
+    else lines.push('Возраст: ' + d.age.name + '.');
+    lines.push('Ранения: <b>' + d.wounds + '</b> · Атаки: <b>' + d.attacks + '</b>' + (d.attacksNote ? ' (' + d.attacksNote + ')' : '') + ' · Дыхание: конус <b>' + d.cone + ' м</b>, ' + d.freq + '. Дыхание заменяет обычные атаки; попавший под огонь описывает, куда бросается или чем прикрывается, и делает спасбросок (успех — укрылся, частичный — одно ранение, провал — сгорает; полная защита от огня спасает и от драконьего пламени).');
+    lines.push('Уязвимость: ' + d.vuln);
+    if (d.species === 'skola') {
+        lines.push('Облик: ' + d.head + ' голова; ' + d.feature + '. Крылья: есть. Дар: владеет магией.');
+    } else {
+        lines.push('Облик: к6 = ' + d.headRoll + ' → <b>' + d.head + '</b> голова; к6 = ' + d.scalesRoll + ' → чешуя <b>' + d.scales + '</b>; к6 = ' + d.featureRoll + ' → <b>' + d.feature + '</b>.');
+        lines.push('Крылья: к6 = ' + d.wingsRoll + ' → ' + (d.wings ? '<b>летает</b>' : '<b>бескрыл</b>') + (d.wings ? ' (нужен выход, через который можно вылететь)' : '') + '.');
+        lines.push('Магический дар: к6 = ' + d.giftRoll + ' → ' + (d.gift ? '<b>есть</b> (чары подбирает Рефери по нраву и интересам; колдовство занимает место атак в раунде)' : 'нет') + '.');
+    }
+    lines.push('Нрав (2к6 трижды, повторы переброшены): ' + d.temper.map(function (t, i) { return '<b>' + t + '</b>' + (d.temperRolls && d.temperRolls[i] != null ? ' (' + d.temperRolls[i] + ')' : ''); }).join(', ') + '.');
+    lines.push('Алчность (2к6 = ' + (d.greedRoll != null ? d.greedRoll : '—') + '): ' + d.greed + '.');
+    if (d.interestTwo) lines.push('Интерес (2к6 = ' + d.interestRoll + '): <b>выберите два разных интереса</b> (магические предметы, книги, оружие и доспехи, изделия мастеров, древности и карты, редкие живые существа, изысканная еда, любовь и ухаживание).');
+    else if (d.interest) lines.push('Интерес (2к6 = ' + d.interestRoll + '): <b>' + d.interest + '</b>.');
+    if (d.lairRoll != null) lines.push('Логово (2к6 = ' + d.lairRoll + '): <b>' + d.lair + '</b>. Почти весь клад в главном зале, до остального дракон добирается за два хода. Земли на несколько дней пути вокруг считает своими.');
+    else lines.push('Логово: ' + d.lair + '.');
+    if (d.extra) lines.push('<span class="muted">' + d.extra + '</span>');
+    lines.push('<label>Цель дракона: <input type="text" id="encDragonGoal" style="width:260px;" value="' + esc2(d.goal || '') + '" onchange="enc2DragonNote(\'goal\', this.value)"></label> <label>Уступка, на которую готов: <input type="text" id="encDragonConcession" style="width:260px;" value="' + esc2(d.concession || '') + '" onchange="enc2DragonNote(\'concession\', this.value)"></label>');
+    lines.push('<span class="muted">Сначала решите, что дракону нужно и на какую уступку он готов; повторная просьба после отказа для него оскорбительна. Клад — ×' + (d.age.mult || 6) + ' по возрасту (шаг 2).</span>');
+    return lines.join('<br>');
+}
+
+function creatureCard2(info) {
+    const e = BESTIARY2[info.key];
+    const lines = [];
+    let w = e.w, a = e.a;
+    if (info.variant && e.forms && e.forms[info.variant]) { w = e.forms[info.variant].w || w; a = e.forms[info.variant].a || a; }
+    lines.push('<b>' + info.display + '</b> · Ранения ' + w + ' · Атаки ' + a + ' · Мораль ' + e.m);
+    if (info.variantRows) {
+        const vr = info.variantRoll;
+        if (info.variantRows.length === 1) {
+            const r0 = info.variantRows[0];
+            lines.push('Вид (к6 = ' + vr + '): <b>' + r0.name + '</b> — атаки ' + r0.a + '. ' + r0.d + '. Ранения 1–6 по виду — назначьте.');
+        } else {
+            lines.push('Вид (к6 = ' + vr + '): ' + info.variantRows.map(function (r) { return '<b>' + r.name + '</b> (атаки ' + r.a + ')'; }).join(' или ') + ' — книга даёт общий диапазон 3–4, выберите. Ранения 1–6 по виду — назначьте.');
+        }
+    }
+    lines.push('<span class="muted">' + e.h + '</span>');
+    if (e.num && e.num.extra && info.companionRoll != null) lines.push('Спутники: ' + e.num.extra + ' (к3 = ' + info.companionRoll + ').');
+    if (e.lair) lines.push('Логово: ' + e.lair);
+    if (e.tr && e.tr.note) lines.push('Добыча: ' + e.tr.note);
+    return lines.join('<br>');
+}
+
+function humanCard2(info) {
+    const e = HUMAN2[info.key];
+    const lines = [];
+    lines.push('<b>' + info.display + '</b> · Ранения ' + e.w + ' · Атаки ' + e.a + ' · Мораль ' + e.m);
+    lines.push('<span class="muted">' + e.h + '</span>');
+    return lines.join('<br>');
+}
+
+// Численность: предзаполнение и подсказка для шага 2.
+function numPrefill2(info) {
+    if (info.kind === 'dragon') return { value: 1, hint: 'каждый дракон живёт один' };
+    if (info.kind === 'manual') return { value: '', hint: 'встреча задана Рефери — укажите численность' };
+    if (info.kind === 'human') {
+        const e = HUMAN2[info.key];
+        if (e.num.k === 'retinue') {
+            const cr = roll(6), sr = roll(6);
+            const calling = RETINUE2_CALLING[cr - 1];
+            const scale = rangeOf(RETINUE2_SCALE, sr);
+            enc2State.retinue = { callingRoll: cr, calling: calling, scaleRoll: sr, scale: scale };
+            return { value: '', hint: 'Призвание: к6 = ' + cr + ' → <b>' + calling + '</b>. Размах: к6 = ' + sr + ' → <b>' + scale.who + '</b>. Вооружённые люди ' + scale.men[0] + '–' + scale.men[1] + ', чудесные существа ' + scale.fantastic[0] + '–' + scale.fantastic[1] + ', ближние спутники ' + scale.companions[0] + '–' + scale.companions[1] + ' — выберите численность в пределах по делу свиты.' };
+        }
+        if (e.num.k === 'wanderers') {
+            const w = rollSum(2, 6);
+            const per = []; let total = 0;
+            for (let i = 0; i < w; i++) { const p = rollSum(2, 6); per.push(p); total += p; }
+            const lr = roll(6);
+            enc2State.wanderers = { wagons: w, per: per, total: total, leaderRoll: lr, leader: lr <= 3 };
+            return { value: total, hint: '2к6 повозок = <b>' + w + '</b>, по 2к6 человек в каждой: ' + per.join(', ') + ' (всего ' + total + '). К6 на обоз = ' + lr + ' → ' + (lr <= 3 ? '<b>с ними едет известный Воин или Заклинатель</b> (решите, чья повозка и с кем связан родством)' : 'известного Воина/Заклинателя нет') + '. Среди каждых пяти вооружённых защитников: трое пеших со щитами, один стрелок, один всадник.' };
+        }
+        return { value: '', hint: e.num.note };
+    }
+    const e = BESTIARY2[info.key];
+    let num = (info.variant && e.nv && e.nv[info.variant]) ? e.nv[info.variant] : e.num;
+    if (!num) return { value: '', hint: 'численность по обстановке' };
+    if (num.k === 'fix') return { value: num.v, hint: num.note || 'статья задаёт ровно столько' };
+    if (num.k === 'range') return { value: '', hint: 'Диапазон <b>' + num.min + '–' + num.max + '</b> (' + (num.note || 'статья') + '). Кость не назначена — выберите численность.' };
+    if (num.k === 'manual') return { value: '', hint: num.note };
+    if (num.k === 'threat') {
+        let wmax = e.wt;
+        if (info.variant && e.forms && e.forms[info.variant] && e.forms[info.variant].w) {
+            const mm = e.forms[info.variant].w.match(/(\d+)\s*$/);
+            if (mm) wmax = parseInt(mm[1]);
+        }
+        const t = threatTier(wmax);
+        if (t.kind === 'fix') return { value: t.v, hint: 'Общая таблица угрозы (с. 27): ' + t.label + '.' };
+        if (t.kind === 'dice') { const v = rollSum(t.n, t.d); return { value: v, hint: 'Статья численность не задаёт; общая таблица угрозы (с. 27): ' + t.label + ' = <b>' + v + '</b>. Уточните при необходимости.' }; }
+        return { value: '', hint: 'Статья численность не задаёт; общая таблица угрозы (с. 27): <b>' + t.label + '</b>. Выберите численность.' };
+    }
+    if (num.k === 'dice') { const v = rollSum(num.n, num.d); return { value: v, hint: num.n + 'к' + num.d + ' = ' + v + ' (' + num.note + ')' }; }
+    if (num.k === 'd6map') {
+        const r = roll(6);
+        let v = 1;
+        for (let i = 0; i < num.map.length; i++) if (r >= num.map[i][0] && r <= num.map[i][1]) v = num.map[i][2];
+        return { value: v, hint: 'к6 = ' + r + ' → ' + v + ' (' + num.note + ')' };
+    }
+    if (num.k === 'tur') {
+        const r = roll(6);
+        if (r <= 2) return { value: 1, hint: 'к6 = ' + r + ' → один бык' };
+        const cows = roll(6), calves = roll(10);
+        enc2State.tur = { cows: cows, calves: calves };
+        return { value: 1 + cows + calves, hint: 'к6 = ' + r + ' → бык, при нём к6 = ' + cows + ' коров (5–6 ранений) и к10 = ' + calves + ' телят (1–3 ранения)' };
+    }
+    return { value: '', hint: 'численность по обстановке' };
+}
+
+function enc2ConfigureStep2() {
+    const st = enc2State;
+    const info = st.info;
+    const basisEl = enc2El('encTreasureBasis');
+    const opts = [];
+    opts.push(['none', 'Сокровищ нет']);
+    opts.push(['cache', 'Обычный тайник (приложение IV)']);
+    opts.push(['young', 'Клад юного дракона (джинн, нага, ракшас)']);
+    if (info.kind === 'dragon') opts.push(['dragon', 'Клад дракона по возрасту']);
+    if (info.kind === 'dragon' && info.species === 'skola') opts.push(['skola', 'Клад Ско’лы (фиксированный)']);
+    opts.push(['human', 'Что при человеке (приложение IV)']);
+    const e = info.kind === 'creature' ? BESTIARY2[info.key] : (info.kind === 'human' ? HUMAN2[info.key] : null);
+    const tr = e ? e.tr : null;
+    const articleKinds = ['anakim', 'naga', 'lycan', 'unicorn', 'hind', 'nemean'];
+    if (tr && articleKinds.indexOf(tr.k) >= 0) opts.push(['article', 'Описанный клад статьи']);
+    opts.push(['referee', 'Решает Рефери (бросок не назначен)']);
+    basisEl.innerHTML = opts.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('');
+    let preselect = 'referee';
+    if (info.kind === 'dragon') preselect = info.species === 'skola' ? 'skola' : 'dragon';
+    else if (info.kind === 'manual') preselect = 'referee';
+    else if (tr) {
+        if (tr.k === 'none') preselect = 'none';
+        else if (tr.k === 'djinn') preselect = 'young';
+        else if (tr.k === 'human') preselect = 'human';
+        else if (articleKinds.indexOf(tr.k) >= 0) preselect = 'article';
+        else if (tr.k === 'dragon') preselect = 'dragon';
+        else if (tr.k === 'skola') preselect = 'skola';
+    }
+    basisEl.value = preselect;
+    // Панель описанного клада.
+    const art = enc2El('encArtPanel');
+    if (tr && tr.k === 'anakim') {
+        art.innerHTML = '<label>Самоцветов при нём (1–10): <input type="number" id="encArtGems" min="1" max="10"></label> <label>Золотых при нём (10–100): <input type="number" id="encArtGold" min="10" max="100"></label> <label><input type="checkbox" id="encArtCastle"> В замке (казна взрослого вирма, 2к6 грифонов, к6 чар)</label>';
+    } else if (tr && tr.k === 'naga') {
+        art.innerHTML = '<label><input type="checkbox" id="encArtPalace"> Дворец наг (к6 наг, на каждую — клад джинна)</label> <label>Ранения наги (7–8), если одна: <input type="number" id="encArtWounds" min="7" max="8"></label> <span class="muted">Камень во лбу: 1000 зол. за каждое ранение.</span>';
+    } else if (tr && tr.k === 'lycan') {
+        art.innerHTML = '<label>Серебра на каждого в логове (10–100): <input type="number" id="encArtSilver" min="10" max="100"></label> <span class="muted">Умножается на численность; при себе сокровищ нет.</span>';
+    } else if (tr && (tr.k === 'unicorn' || tr.k === 'hind' || tr.k === 'nemean')) {
+        art.innerHTML = '<span class="muted">' + (tr.k === 'unicorn' ? 'Аликорн: в городе за целый рог дают 10 000 золотых.' : (tr.k === 'hind' ? 'Два рога из чистого золота по 20 000 золотых каждый.' : 'Шкура: 20 000 золотых; снять можно только когтями самого льва.')) + '</span>';
+    } else art.innerHTML = '';
+    // Панель свиты.
+    const ret = enc2El('encRetinuePanel');
+    if (st.retinue) {
+        const s = st.retinue.scale;
+        ret.innerHTML = '<label>Чудесные существа (' + s.fantastic[0] + '–' + s.fantastic[1] + '): <input type="number" id="encNumFant" min="0" max="99"></label> <label>Ближние спутники (' + s.companions[0] + '–' + s.companions[1] + '): <input type="number" id="encNumComp" min="0" max="99"></label>';
+    } else ret.innerHTML = '';
+    enc2SyncBasis();
+}
+
+function enc2SyncBasis() {
+    const b = enc2El('encTreasureBasis').value;
+    enc2El('encCacheCountWrap').style.display = b === 'cache' ? '' : 'none';
+    const hp = enc2El('encHumanPanel');
+    hp.style.display = b === 'human' ? 'inline-flex' : 'none';
+    hp.style.gap = '14px'; hp.style.flexWrap = 'wrap'; hp.style.alignItems = 'center';
+    const art = enc2El('encArtPanel');
+    const showArt = b === 'article' && art.innerHTML;
+    art.style.display = showArt ? 'inline-flex' : 'none';
+    art.style.gap = '14px'; art.style.flexWrap = 'wrap'; art.style.alignItems = 'center';
+}
+
+function enc2RenderStep1() {
+    const st = enc2State;
+    const steps = [];
+    if (st.daily) {
+        const d = st.daily;
+        steps.push(encAdd('Переход (с. 35–36)', d.speed.name + ': базовая скорость <b>' + d.speed.base + '</b> гекс/день. ' + (d.speed.slow ? 'Труднопроходимая местность без дороги уменьшает движение вдвое с округлением вниз: <b>' + d.speed.speed + '</b> гекс/день.' : 'Замедления нет: <b>' + d.speed.speed + '</b> гекс/день.') + ' Переход через следующий гекс и обычный ночлег не добавляют проверку.'));
+        steps.push(encAdd('Дневная проверка встречи', d.pass.txt + '. К6 = <b>' + d.roll + '</b> → ' + (d.hit ? '<b>встреча есть</b>' : '<b>встречи нет</b>') + '.'));
+        if (!d.hit) {
+            steps.push(encAdd('Итог', 'Встречи нет. Расчёт завершён до броска по столбцу обитателей.'));
+            st.step1snapshot = steps.join('');
+            enc2El('encOutput').innerHTML = st.step1snapshot;
+            enc2El('encStep2').style.display = 'none';
+            return;
+        }
+        steps.push(encAdd('Время встречи', 'К6 = ' + d.timeRoll + ' → <b>' + st.time + '</b>.'));
+    }
+    if (st.manual) {
+        steps.push(encAdd('Встреча задана Рефери', '<b>' + esc2(st.inhabitant) + '</b>. Для города и открытого океана в приложении II нет столбцов — местную встречу определяет Рефери.'));
+    } else if (st.cellState) {
+        const colName = ENC2_COLS.filter(function (c) { return c.id === st.col; })[0].name;
+        steps.push(encAdd('Обитатель (приложение II, с. 60–63)', 'Столбец «<b>' + colName + '</b>». 2к6 = ' + st.d6[0] + ' + ' + st.d6[1] + ' = <b>' + st.sum + '</b>. Ячейка: ' + cellText2(st.cellState.cell) + '.'));
+        const ex = st.cellState.extra;
+        if (ex) {
+            if (ex.kind === 'pair') steps.push(encAdd('Выбор из пары', 'К6 = <b>' + ex.roll + '</b> → ' + (ex.roll <= 3 ? 'первый вариант (1–3)' : 'второй вариант (4–6)') + '.'));
+            else if (ex.kind === 'd6') steps.push(encAdd('Выбор по к6', 'К6 = <b>' + ex.roll + '</b> → ' + cellOptText2(st.cellState.opt) + '.'));
+            else if (ex.kind === 'sub') steps.push(encAdd('Условная замена', 'К6 = <b>' + ex.roll + '</b>. ' + st.cellState.cell.cond + ' при 4–6 на к6 основной результат заменяется на «' + st.cellState.cell.sub + '»; вне указанного места сохраняется основной результат.'));
+        }
+        if (st.cellState.pending) {
+            const p = st.cellState.pending;
+            let btns;
+            if (p.kind === 'cond') btns = p.options.map(function (o, i) { return '<button class="tool-btn" onclick="enc2Pick(' + i + ')">' + o.label + ' → ' + o.c + '</button>'; }).join(' ');
+            else btns = p.options.map(function (o, i) { return '<button class="tool-btn" onclick="enc2Pick(' + i + ')">' + o + '</button>'; }).join(' ');
+            steps.push(encAdd('Выбор по обстановке', (p.twilight ? 'Сумерки: время не различает день и ночь — ' : '') + 'выберите вариант: ' + btns));
+        }
+        if (st.cellState.cell.t === 'sub') {
+            const on = st.cellState.subOn;
+            steps.push(encAdd('Место встречи', '<label><input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="enc2SubToggle(this.checked)"> ' + st.cellState.cell.cond + '</label> → ' + (on && st.cellState.extra.roll >= 4 ? '<b>' + st.cellState.cell.sub + '</b> (замена)' : '<b>' + st.cellState.cell.c + '</b> (основной результат)')));
+        }
+    }
+    if (st.info) {
+        if (st.info.kind === 'dragon') steps.push(encAdd('Карточка дракона (с. 39–40)', dragonCard2(st.dragon)));
+        else if (st.info.kind === 'creature') steps.push(encAdd('Обитатель (приложение II)', creatureCard2(st.info)));
+        else if (st.info.kind === 'human') steps.push(encAdd('Людской отряд (с. 57–59)', humanCard2(st.info)));
+        steps.push(encAdd('Численность — подсказка', st.numHint));
+    }
+    steps.push('<details class="enc-cache"><summary>Местные замены и таблица угрозы (справка)</summary><div class="muted">' + ENC2_LOCAL_NOTES + '<br><br>Общая таблица угрозы (с. 27), размер группы в Дикой Местности: 1–2 ранения — 20–400; 3–4 — 10–200; 5–6 — 2к6; 7–8 — к6; 9–11 — к6; 12–14 — 1. Применяется, когда статья не задаёт численность; диапазоны без костей выбирает Рефери. Отдельная таблица «сумма 2к6 → угроза» на с. 27 — шаблон для Подземелий, не для Дикой Местности.</div></details>');
+    st.step1snapshot = steps.join('');
+    enc2El('encOutput').innerHTML = st.step1snapshot;
+    enc2El('encStep2').style.display = st.info ? '' : 'none';
+}
+
+function cellText2(cell) {
+    if (cell.t === 'one') return '«' + cell.c + (cell.note ? ' (' + cell.note + ')' : '') + '»';
+    if (cell.t === 'pair') return '«' + cell.a + ' / ' + cell.b + '» (к6: 1–3 первый, 4–6 второй)';
+    if (cell.t === 'd6') return cell.o.map(function (o) { return o.r[0] === o.r[1] ? o.r[0] + ' — ' + o.c : o.r[0] + '–' + o.r[1] + ' — ' + o.c; }).join('; ');
+    if (cell.t === 'cond') return cell.o.map(function (o) { return o.label + ' — ' + o.c; }).join('; ');
+    if (cell.t === 'time') return '«' + cell.night + ' ночью, ' + cell.day + ' днём»';
+    if (cell.t === 'sub') return '«' + cell.c + '. ' + cell.cond + ' при 4–6 на к6 — ' + cell.sub + '»';
+    return '';
+}
+function cellOptText2(opt) { return (opt.r[0] === opt.r[1] ? opt.r[0] : opt.r[0] + '–' + opt.r[1]) + ' — ' + opt.c + (opt.note ? ' (' + opt.note + ')' : ''); }
+
+function enc2Finalize() {
+    const st = enc2State;
+    st.info = inhabitantInfo2(st.inhabitant);
+    if (st.info.kind === 'dragon') {
+        st.dragon = genDragon2(st.info.species, st.heads || 3);
+        st.dragon.goal = ''; st.dragon.concession = '';
+    } else st.dragon = null;
+    if (st.info.kind === 'creature') {
+        const e = BESTIARY2[st.info.key];
+        if (e.variant) {
+            const vr = roll(6);
+            st.info.variantRoll = vr;
+            st.info.variantRows = e.variant.rows.filter(function (r) { return vr >= r.r[0] && vr <= r.r[1]; });
+        }
+        if (e.num && e.num.extra) st.info.companionRoll = roll(3);
+    }
+    const pf = numPrefill2(st.info);
+    st.numHint = pf.hint;
+    enc2El('encNum').value = pf.value;
+    enc2ConfigureStep2();
+    enc2RenderStep1();
+}
+
+function enc2Pick(i) {
+    const st = enc2State;
+    const p = st.cellState.pending;
+    if (!p) return;
+    if (p.kind === 'cond') st.inhabitant = p.options[i].c;
+    else if (p.base === 'Человек (охотник или лесоруб)') st.inhabitant = 'Человек (' + p.options[i].toLowerCase() + ')';
+    else if (p.options[i] === 'Пастух' || p.options[i] === 'Купец' || p.options[i] === 'Дозорный') st.inhabitant = 'Человек (' + p.options[i].toLowerCase() + ')';
+    else st.inhabitant = p.options[i];
+    st.cellState.pending = null;
+    st.retinue = null; st.wanderers = null;
+    enc2Finalize();
+}
+
+function enc2SubToggle(on) {
+    const st = enc2State;
+    st.cellState.subOn = on;
+    st.inhabitant = (on && st.cellState.extra.roll >= 4) ? st.cellState.cell.sub : st.cellState.cell.c;
+    st.retinue = null; st.wanderers = null;
+    enc2Finalize();
+}
+
+function enc2DragonNote(field, val) { if (enc2State && enc2State.dragon) enc2State.dragon[field] = val; }
+
+function enc2Run() {
+    const mode = enc2El('encMode').value;
+    const col = enc2El('encTerrain').value;
+    enc2State = { mode: mode, col: col, time: null, daily: null, manual: null, retinue: null, wanderers: null, tur: null, result: null };
+    if (col === 'manual') {
+        const name = enc2El('encManualName').value.trim();
+        if (!name) { alert('Укажите, кто встретился (город, открытый океан или иная местность без столбца).'); return; }
+        enc2State.manual = true;
+        enc2State.inhabitant = name;
+        enc2Finalize();
         return;
     }
-    const pctLair = lairUndetermined ? 0 : parseInt(pctRaw);
-    const numAppear = parseInt(numRaw);
-    const out = document.getElementById('encOutput');
-    const steps = [];
-
-    let found = false;
-    if (lairUndetermined) {
-        steps.push(encAdd('% в логове', 'В книге % в логове не задан (люди) — логово не определяется.'));
-    } else {
-        const d100 = roll(100);
-        found = d100 <= pctLair;
-        steps.push(encAdd('% в логове', pctLair + '% → d100 = <b>' + d100 + '</b> → ' + (found ? '<b>логово найдено</b>' : 'логово не найдено') + '.'));
+    if (mode === 'daily') {
+        const method = enc2El('encMethod').value;
+        const passId = enc2El('encPass').value;
+        const road = enc2El('encRoad').checked;
+        const pass = PASS2.filter(function (p) { return p.id === passId; })[0];
+        const speed = travelSpeed2(method, passId, road);
+        const r = roll(6);
+        const hit = pass.thr.indexOf(r) >= 0;
+        enc2State.daily = { speed: speed, pass: pass, road: road, roll: r, hit: hit, timeRoll: null };
+        if (!hit) { enc2RenderStep1(); return; }
+        const tr = roll(6);
+        enc2State.daily.timeRoll = tr;
+        enc2State.time = timeOfDay2(tr);
     }
-    let numInfo;
-    if (encState.retainer) {
-        const r = encState.retainer;
-        numInfo = r.leader + '/Men at Arms ' + r.counts.men[0] + '–' + r.counts.men[1] + (numLabel ? ' → ' + numLabel : '');
-    } else if (entry && entry.num) {
-        numInfo = 'диапазон ' + entry.num[0] + '–' + entry.num[1] + (numLabel ? ' → ' + numLabel : '');
+    const a = roll(6), b = roll(6);
+    enc2State.d6 = [a, b];
+    enc2State.sum = a + b;
+    enc2State.cellState = resolveCell2(col, a + b, enc2State.time);
+    if (enc2State.cellState.inhabitant) {
+        enc2State.inhabitant = enc2State.cellState.inhabitant;
+        enc2State.note = enc2State.cellState.note || null;
+        enc2Finalize();
     } else {
-        numInfo = 'задано рефери';
+        enc2State.info = null;
+        enc2RenderStep1();
     }
-    steps.push(encAdd('Численность', numInfo + ': <b>' + numAppear + '</b>.'));
-    if (entry && entry.nc) steps.push(encAdd('Некомбатанты', entry.nc));
+}
 
-    let lairName = '';
-    if (found) {
-        const lair = genLairDetails(encState.type === 'Undead');
-        steps.push(encAdd('Логово', lair.html));
-        lairName = lair.name;
-    } else if (lairUndetermined) {
-        steps.push(encAdd('Логово', 'Логово не определяется — в книге % в логове не задан.'));
-    } else {
-        steps.push(encAdd('Логово', 'Логово не найдено — тип логова не определяется.'));
-    }
+function enc2DragonManual() {
+    const species = enc2El('encDragonSpecies').value;
+    const heads = parseInt(enc2El('encHeads').value) || 3;
+    enc2State = { mode: 'direct', col: null, time: null, daily: null, manual: null, retinue: null, wanderers: null, tur: null, result: null, heads: heads };
+    const names = { wyrm: 'Дракон (вирм)', great: 'Дракон (великий вирм)', lindwurm: 'Линдвурм', lun: 'Лун', gorynych: 'Змей Горыныч', skola: 'Ско’ла' };
+    enc2State.inhabitant = names[species];
+    enc2State.cellState = null;
+    enc2Finalize();
+}
 
-    // Сокровище логова — генерируется только если логово найдено
-    if (found) {
-        const letter = entry ? entry.trsr : null;
-        if (letter === null || letter === undefined) {
-            steps.push(encAdd('Сокровище логова', '<span class="muted">Тип сокровища для этого существа в CoZ не задан — решает рефери.</span>'));
-        } else if (letter === '-') {
-            steps.push(encAdd('Сокровище логова', 'Тип сокровища «—»: сокровища нет.'));
-        } else if (letter === 'O') {
-            steps.push(encAdd('Сокровище логова', 'В таблице напечатано «O»; по описанию Giant Eagle (стр. 172) сокровища нет — не генерируем.'));
-        } else {
-            const aquatic = document.getElementById('encWaterLair').checked;
-            const key = letter === 'A' ? (aquatic ? 'A: Water' : 'A: Land') : letter;
-            const tres = genTreasureHtml(key);
-            steps.push(encAdd('Сокровище логова (CoZ, тип ' + key + ')', tres.html));
+function enc2Visit() {
+    if (!enc2State || !enc2State.dragon) return;
+    const v = dragonVisit2();
+    enc2State.dragon.visit = v;
+    const el = enc2El('encVisitOut');
+    if (el) el.innerHTML = 'К6 = <b>' + v.roll + '</b> → ' + v.txt + '.';
+}
+
+// Предводители людских отрядов по численности.
+function leaders2(kind, n) {
+    const lines = [];
+    if (kind === 'sea') {
+        const vets = Math.floor(n / 30), famed = Math.floor(n / 100);
+        lines.push('Опытных Воинов (за каждые полные 30): <b>' + vets + '</b>; прославленных предводителей (за каждую полную сотню): <b>' + famed + '</b>.');
+        for (let i = 0; i < vets; i++) {
+            const r = roll(6);
+            lines.push('За полные 30 №' + (i + 1) + ': к6 = ' + r + ' → ' + (r <= 2 ? '<b>есть Заклинатель</b> (назовите чары, ради которых капитан держит его на борту)' : 'Заклинателя нет'));
         }
+        lines.push('<span class="muted">Из десяти бойцов: шестеро в кожаном доспехе со щитом, трое с лёгкими арбалетами, один с тяжёлым.</span>');
+        return lines.join('<br>');
+    }
+    if (kind === 'raiders') {
+        if (n < 30) {
+            const r = roll(6);
+            lines.push('Отряд меньше 30: к6 = ' + r + ' → ' + (r <= 3 ? '<b>ведёт опытный Воин или Заклинатель</b> (выберите)' : 'ведёт один из налётчиков, знающий дорогу'));
+        } else {
+            lines.push('Предводители — по таблице разбойников:<br>' + banditLeaders2(n));
+        }
+        if (n === 30) { const r = roll(6); lines.push('Служитель при 30 людях: к6 = ' + r + ' → ' + (r === 1 ? '<b>есть</b>' : 'нет')); }
+        else if (n >= 31 && n <= 100) { const r = roll(6); lines.push('Служитель при 31–100: к6 = ' + r + ' → ' + (r <= 2 ? '<b>есть</b>' : 'нет')); }
+        else if (n > 100) {
+            const h = Math.floor(n / 100);
+            for (let i = 0; i < h; i++) { const r = roll(6); lines.push('Служитель у полной сотни №' + (i + 1) + ': к6 = ' + r + ' → ' + (r <= 2 ? '<b>есть</b>' : 'нет')); }
+        }
+        return lines.join('<br>');
+    }
+    return banditLeaders2(n);
+}
+function banditLeaders2(n) {
+    const lines = [];
+    if (n <= 29) {
+        const r = roll(6);
+        lines.push('Заводила из своих; к6 = ' + r + ' → ' + (r === 1 ? '<b>среди них прославленный Воин</b>' : 'прославленного Воина нет'));
+    } else if (n === 30) {
+        const r = roll(6);
+        lines.push('Воин, за которым остальные уже ходили в бой; к6 = ' + r + ' → ' + (r === 1 ? '<b>с ним Служитель или Заклинатель</b> (выберите)' : 'Служителя/Заклинателя нет'));
+    } else if (n <= 100) {
+        const r = roll(6);
+        lines.push('Трое опытных Воинов ведут каждый своих людей; к6 = ' + r + ' → ' + (r <= 2 ? '<b>с ними Служитель или Заклинатель</b> (выберите)' : 'Служителя/Заклинателя нет'));
+    } else if (n <= 200) {
+        lines.push('Предводитель и шестеро Воинов, которым он поручает отдельные отряды.');
     } else {
-        steps.push(encAdd('Сокровище логова', 'Логово не найдено — сокровища логова не определяются.'));
+        const h = Math.floor(n / 100);
+        lines.push('У каждой полной сотни (' + h + ') свой предводитель и трое Воинов; над ними стоит вожак.');
     }
-
-    // Личное сокровище (CoZ, стр. 144)
-    if (document.getElementById('encIndividual').checked) {
-        const cp = roll(20), sp = roll(20), gp = roll(10);
-        steps.push(encAdd('Личное сокровище (стр. 144)', 'Немного меди: ' + cp + ' cp; серебро: <b>' + sp + ' sp</b>; золото: <b>' + gp + ' gp</b>. <span class="muted">У разумных существ, на усмотрение рефери.</span>'));
+    if (n > 100) {
+        const h = Math.floor(n / 100);
+        let any = false;
+        for (let i = 0; i < h; i++) {
+            const r = roll(6);
+            if (r <= 2) any = true;
+            lines.push('Лагерь, полная сотня №' + (i + 1) + ': к6 = ' + r + ' → ' + (r <= 2 ? '<b>есть Служитель или Заклинатель</b>' : 'нет'));
+        }
+        if (any) lines.push('<span class="muted">Выберите одно из двух призваний для всего лагеря: Служитель может сам проповедовать дело повстанцев, Заклинатель — служить вожаку за долю добычи.</span>');
     }
+    lines.push('<span class="muted">Предводители и их спутники входят в численность. Состав сотни: 35 пеших со щитами, 25 лучников или арбалетчиков, 25 легковооружённых всадников, 15 всадников в среднем доспехе.</span>');
+    return lines.join('<br>');
+}
 
-    const pr = roll(6);
-    const pct = pr <= 4 ? 40 : (pr === 5 ? 50 : 60);
-    const inLair = Math.round(numAppear * pct / 100);
-    const outside = numAppear - inLair;
-    steps.push(encAdd('Присутствие', 'd6 = <b>' + pr + '</b> → ' + pct + '% присутствуют. В логове: <b>' + inLair + '</b>, вне логова: <b>' + outside + '</b>.'));
-
-    const groups = splitGroups(outside);
-    steps.push(encAdd('Группы вне логова', groups.length === 1 ? '1 группа (' + groups[0] + ').' : groups.length + ' группы: ' + groups.join(', ') + '.'));
-
-    const pc = encState.pc;
-    if (pc >= 1) {
-        const pcR = pcRange(pc);
-        const mod = terrainMod(encState.terrain);
-        let discMod = mod.disc, evadMod = mod.evad;
-        if (encState.road) { discMod += 20; evadMod -= 20; }
-        let rows = '';
-        groups.forEach(function (g, i) {
-            const npcR = npcRange(g);
-            const base = DISCOVERY[pcR][npcR];
-            const disc = clamp(base[0] + discMod, 5, 100);
-            const evad = clamp(base[1] + evadMod, 0, 100);
-            const droll = roll(100);
-            const eroll = roll(100);
-            rows += '<div>Группа ' + (i + 1) + ' (' + g + ' шт., NPC ' + npcR + '): обнаружение ' + disc + '% → d100=' + droll + ' (' + (droll <= disc ? 'обнаружены' : 'нет') + '); уклонение ' + evad + '% → d100=' + eroll + ' (' + (eroll <= evad ? 'уклонились' : 'замечены') + ').</div>';
-        });
-        const modNote = mod.note + (encState.road ? ' Путь по дороге: +20% к обнаружению, −20% к уклонению.' : '');
-        steps.push(encAdd('Обнаружение / уклонение', '<div>PC: <b>' + pc + '</b> (диапазон ' + pcR + '). ' + modNote + '</div>' + rows));
+function enc2Continue() {
+    const st = enc2State;
+    if (!st || !st.info) return;
+    const numRaw = enc2El('encNum').value;
+    if (numRaw === '') { alert('Укажите численность: книга задаёт диапазон или выбор по обстановке.'); return; }
+    const n = parseInt(numRaw);
+    const steps = [];
+    steps.push(encAdd('Численность', '<b>' + n + '</b>. ' + st.numHint));
+    if (st.retinue) {
+        const s = st.retinue.scale;
+        const fant = enc2El('encNumFant').value, comp = enc2El('encNumComp').value;
+        steps.push(encAdd('Состав свиты', 'Предводитель: <b>' + st.retinue.calling + '</b> (' + s.who + '). Вооружённые люди: <b>' + n + '</b> (пределы ' + s.men[0] + '–' + s.men[1] + '). Чудесные существа: <b>' + (fant === '' ? '—' : fant) + '</b> (пределы ' + s.fantastic[0] + '–' + s.fantastic[1] + '). Ближние спутники: <b>' + (comp === '' ? '—' : comp) + '</b> (пределы ' + s.companions[0] + '–' + s.companions[1] + ').'));
+    }
+    if (st.wanderers) {
+        steps.push(encAdd('Обоз скитальцев', 'Повозок: <b>' + st.wanderers.wagons + '</b>, человек в каждой: ' + st.wanderers.per.join(', ') + '.'));
+    }
+    if (st.tur) {
+        steps.push(encAdd('Стадо тура', 'Бык, коров: <b>' + st.tur.cows + '</b> (5–6 ранений), телят: <b>' + st.tur.calves + '</b> (1–3 ранения).'));
+    }
+    const e = st.info.kind === 'creature' ? BESTIARY2[st.info.key] : (st.info.kind === 'human' ? HUMAN2[st.info.key] : null);
+    if (e && e.leaders) steps.push(encAdd('Предводители отряда', leaders2(e.leaders, n)));
+    // Логово.
+    if (st.info.kind === 'dragon') {
+        const d = st.dragon;
+        let lairHtml = 'Тип логова: <b>' + d.lair + '</b>.';
+        if (d.wings) lairHtml += ' Крылатому нужен выход, через который он может вылететь.';
+        lairHtml += ' Почти весь клад лежит в главном зале, до остального дракон добирается за два хода. Земли на несколько дней пути вокруг он считает своими.<br><button class="tool-btn" onclick="enc2Visit()">Отряд пришёл в логово</button> <span id="encVisitOut" class="muted">' + (d.visit ? 'К6 = <b>' + d.visit.roll + '</b> → ' + d.visit.txt + '.' : 'состояние определяется только при появлении отряда') + '</span>';
+        steps.push(encAdd('Логово дракона', lairHtml));
+    } else if (e && e.lair) {
+        steps.push(encAdd('Логово', e.lair + ' <span class="muted">Число находящихся внутри, шанс встречи в логове и наличие клада — три отдельных вопроса; сначала статья. Ориентир с. 27: обычные для местности существа — 50% и выше в логове, самые опасные и редкие — около 15%.</span>'));
     } else {
-        steps.push(encAdd('Обнаружение / уклонение', 'Укажите число PC для расчёта.'));
+        steps.push(encAdd('Логово', 'В статье логово не описано — определяет Рефери. <span class="muted">Ориентир с. 27: обычные для местности существа — 50% и выше в логове, самые опасные и редкие — около 15%.</span>'));
     }
-
-    steps.push(encAdd('Сюрприз', surpriseStep()));
-
-    if (found && lairName.indexOf('Castle') >= 0) {
-        const t = roll(6) * 100;
-        steps.push(encAdd('Пошлина замка', 'Fighters/Clerics: <b>' + t + '</b> gp за группу (1d6×100). Magic-users: эквивалент золотом + магические предметы.'));
+    // Добыча.
+    const basis = enc2El('encTreasureBasis').value;
+    const parts = [];
+    let treasureHtml = '';
+    if (basis === 'none') {
+        treasureHtml = 'Сокровищ нет' + (e && e.tr && e.tr.note ? ': ' + e.tr.note : '') + '.';
+    } else if (basis === 'referee') {
+        treasureHtml = 'Бросок на клад не назначен — добычу определяет Рефери по явному указанию.' + (e && e.tr && e.tr.note ? ' Статья: ' + e.tr.note : '');
+    } else if (basis === 'cache') {
+        const cnt = clamp(parseInt(enc2El('encCacheCount').value) || 1, 1, 10);
+        const caches = [];
+        for (let i = 0; i < cnt; i++) caches.push(rollCache2(0));
+        caches.forEach(function (c) { parts.push({ kind: 'cache', data: c }); });
+        treasureHtml = caches.map(function (c, i) { return cacheHtml2(c, i + 1); }).join('');
+    } else if (basis === 'young') {
+        const h = rollDragonHoard2(1);
+        parts.push({ kind: 'hoard', data: h });
+        treasureHtml = hoardHtml2(h, 'Клад юного дракона (джинн, нага, ракшас)');
+    } else if (basis === 'dragon') {
+        const mult = st.dragon.age.mult || 6;
+        const h = rollDragonHoard2(mult);
+        parts.push({ kind: 'hoard', data: h });
+        treasureHtml = hoardHtml2(h, 'Клад дракона по возрасту (×' + mult + ')');
+    } else if (basis === 'skola') {
+        const h = skolaHoard2();
+        parts.push({ kind: 'hoard', data: h });
+        treasureHtml = hoardHtml2(h, 'Клад Ско’лы (фиксированный)');
+    } else if (basis === 'human') {
+        const known = enc2El('encIncomeMode').value === 'known';
+        let monthly, incomeInfo = null, tier = null;
+        if (known) {
+            monthly = parseInt(enc2El('encIncomeKnown').value);
+            if (!monthly || monthly < 1) { alert('Укажите месячный доход в серебряных.'); return; }
+            tier = INCOME2[0];
+            for (let i = 0; i < INCOME2.length; i++) if (monthly >= INCOME2[i].monthly) tier = INCOME2[i];
+        } else {
+            incomeInfo = rollIncome2();
+            monthly = incomeInfo.tier.monthly;
+            tier = incomeInfo.tier;
+        }
+        const ctx = enc2El('encMoneyCtx').value;
+        const m = humanMoney2(monthly, ctx);
+        const magic = humanMagic2(tier);
+        treasureHtml = humanHtml2(m, magic, incomeInfo);
+        if (m.home != null && ctx === 'home') parts.push({ kind: 'coins', data: { bronze: 0, silver: m.home, gold: 0 } });
+        if (m.travel != null && (ctx === 'journey' || ctx === 'local')) parts.push({ kind: 'coins', data: { bronze: 0, silver: m.travel, gold: 0 } });
+        if (ctx === 'both') parts.push({ kind: 'coins', data: { bronze: 0, silver: m.homeAfter, gold: 0 } });
+        if (magic.ok) parts.push({ kind: 'magic', data: magic.item });
+    } else if (basis === 'article') {
+        const tr = e.tr;
+        if (tr.k === 'anakim') {
+            const gn = parseInt(enc2El('encArtGems').value);
+            const gv = parseInt(enc2El('encArtGold').value);
+            if (!gn || gn < 1 || gn > 10 || !gv || gv < 10 || gv > 100) { alert('Анаким: самоцветов 1–10, золотых 10–100 — выберите значения в пределах статьи.'); return; }
+            const gems = [];
+            for (let i = 0; i < gn; i++) gems.push(rollGem2());
+            parts.push({ kind: 'gems', data: gems });
+            parts.push({ kind: 'coins', data: { bronze: 0, silver: 0, gold: gv } });
+            treasureHtml = 'При анакиме: <b>' + gn + '</b> самоцветов и <b>' + gv + '</b> золотых.<br>' + gems.map(gemLine2).join('<br>');
+            if (enc2El('encArtCastle').checked) {
+                const h = rollDragonHoard2(3);
+                parts.push({ kind: 'hoard', data: h });
+                treasureHtml += '<br><br>В замке: казна взрослого вирма (золото и серебро), 2к6 грифонов, входы охраняет к6 постоянных чар.' + hoardHtml2(h, 'Казна замка анакима (×3)');
+            }
+        } else if (tr.k === 'naga') {
+            if (enc2El('encArtPalace').checked) {
+                const cnt = roll(6);
+                treasureHtml = 'Дворец: к6 = <b>' + cnt + '</b> наг; на каждую — клад джинна (юного дракона).';
+                for (let i = 0; i < cnt; i++) {
+                    const h = rollDragonHoard2(1);
+                    parts.push({ kind: 'hoard', data: h });
+                    treasureHtml += hoardHtml2(h, 'Клад наги №' + (i + 1));
+                }
+            } else {
+                const w = parseInt(enc2El('encArtWounds').value);
+                if (!w || w < 7 || w > 8) { alert('Укажите ранения наги (7–8) или отметьте дворец.'); return; }
+                parts.push({ kind: 'coins', data: { bronze: 0, silver: 0, gold: w * 1000 } });
+                treasureHtml = 'Камень во лбу наги: <b>' + fmtNum(w * 1000) + ' золотых</b> (по 1000 за каждое из ' + w + ' ранений).';
+            }
+        } else if (tr.k === 'lycan') {
+            const per = parseInt(enc2El('encArtSilver').value);
+            if (!per || per < 10 || per > 100) { alert('Ликантропы: в логове 10–100 серебряных на каждого — выберите значение.'); return; }
+            parts.push({ kind: 'coins', data: { bronze: 0, silver: per * n, gold: 0 } });
+            treasureHtml = 'В логове: <b>' + fmtNum(per * n) + ' сер.</b> (' + per + ' × ' + n + '). При себе сокровищ нет.';
+        } else if (tr.k === 'unicorn') {
+            parts.push({ kind: 'valuable', bronze: 10000 * 10000, txt: 'аликорн (10 000 зол.)' });
+            treasureHtml = 'Аликорн: <b>10 000 золотых</b> в городе; исцеляет от любого яда и снимает «Агонию».';
+        } else if (tr.k === 'hind') {
+            parts.push({ kind: 'valuable', bronze: 40000 * 10000, txt: 'два золотых рога (2 × 20 000 зол.)' });
+            treasureHtml = 'Два рога из чистого золота: <b>40 000 золотых</b> (по 20 000 каждый). Убивший лань делает спасбросок с −2, помогавшие — с −1.';
+        } else if (tr.k === 'nemean') {
+            parts.push({ kind: 'valuable', bronze: 20000 * 10000, txt: 'шкура немейского льва (20 000 зол.)' });
+            treasureHtml = 'Шкура: <b>20 000 золотых</b>; снять можно только когтями самого льва.';
+        }
     }
+    if (parts.length) {
+        const L = ledger2(parts);
+        st.result = { ledger: L };
+        steps.push(encAdd('Добыча', treasureHtml));
+        steps.push(encAdd('Ведомость (приложение IV)', ledgerHtml2(L)));
+    } else {
+        steps.push(encAdd('Добыча', treasureHtml));
+    }
+    st.step2html = steps.join('');
+    enc2El('encOutput').innerHTML = (st.step1snapshot || '') + st.step2html;
+    if (st.dragon) {
+        const g = enc2El('encDragonGoal'), c = enc2El('encDragonConcession');
+        if (g) g.value = st.dragon.goal || '';
+        if (c) c.value = st.dragon.concession || '';
+    }
+}
 
-    out.innerHTML = encState.steps1 + steps.join('');
+function enc2Sale(id) {
+    const st = enc2State;
+    if (!st || !st.result) return;
+    const b = BUYERS2.filter(function (x) { return x.id === id; })[0];
+    const rev = saleBronze2(st.result.ledger.appraisedBronze, b.frac);
+    enc2El('encSaleOut').innerHTML = 'Выручка (' + (b.frac === 0.5 ? '½' : (b.frac === 0.75 ? '¾' : 'полная цена')) + '): <b>' + fmtBronze2(rev) + '</b>. Состав клада не меняется.';
 }
 
 /* ================= TRAVEL: DIRECTION & GETTING LOST ================= */
@@ -1676,21 +2790,34 @@ applyDefaultDensity('map');
 applyDefaultDensity('roll');
 
 function syncEncMode() {
-    document.getElementById('encFreqWrap').style.display = document.getElementById('encMode').value === 'travel' ? '' : 'none';
+    document.getElementById('encDailyWrap').style.display = document.getElementById('encMode').value === 'daily' ? '' : 'none';
 }
 document.getElementById('encMode').addEventListener('change', syncEncMode);
 syncEncMode();
 
-// A: Water автоматически для водных террейнов (рефери может снять галочку)
-function syncWaterLair() {
-    const t = document.getElementById('encTerrain').value;
-    document.getElementById('encWaterLair').checked = (t === 'Lakes and Rivers' || t === 'Ocean');
+function syncEncTerrain() {
+    document.getElementById('encManualWrap').style.display = document.getElementById('encTerrain').value === 'manual' ? '' : 'none';
 }
-document.getElementById('encTerrain').addEventListener('change', syncWaterLair);
-syncWaterLair();
+document.getElementById('encTerrain').addEventListener('change', syncEncTerrain);
+syncEncTerrain();
 
-document.getElementById('encButton').addEventListener('click', startEncounter);
-document.getElementById('encContinue').addEventListener('click', continueEncounter);
+function syncEncSpecies() {
+    document.getElementById('encHeadsWrap').style.display = document.getElementById('encDragonSpecies').value === 'gorynych' ? '' : 'none';
+}
+document.getElementById('encDragonSpecies').addEventListener('change', syncEncSpecies);
+syncEncSpecies();
+
+function syncEncIncome() {
+    document.getElementById('encIncomeKnownWrap').style.display = document.getElementById('encIncomeMode').value === 'known' ? '' : 'none';
+}
+document.getElementById('encIncomeMode').addEventListener('change', syncEncIncome);
+syncEncIncome();
+
+document.getElementById('encTreasureBasis').addEventListener('change', enc2SyncBasis);
+document.getElementById('encButton').addEventListener('click', enc2Run);
+document.getElementById('encContinue').addEventListener('click', enc2Continue);
+document.getElementById('encDragonButton').addEventListener('click', enc2DragonManual);
+
 
 document.getElementById('dirButton').addEventListener('click', dirHandler);
 document.getElementById('lairPlaceButton').addEventListener('click', lairPlaceHandler);
