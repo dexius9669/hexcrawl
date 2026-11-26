@@ -39,7 +39,7 @@ Hardcoded JS data tables (names Russian, matching the 2.0 book):
 
 - `ENC2_COLS` / `ENC2_TABLES` — 11 terrain columns × sums 2–12 (121 cells,
   weights 1,2,3,4,5,6,5,4,3,2,1 of 36). Cell kinds: `one`, `pair` (d6 1–3/4–6),
-  `d6` (stated ranges), `cond` (referee choice), `time` (day/night), `sub`
+  `d6` (stated ranges), `cond` (referee choice), `sub`
   (conditional replacement on d6 4–6).
 - `BESTIARY2` — per-article cards: wounds, attacks, morale, habits, number
   rules (`num`), lair text, treasure basis (`tr`). `ENC2_ALIAS` maps cell names
@@ -75,11 +75,11 @@ separate from rendering so they can be tested with forced dice.
   (fixed, article dice, or an article range) → take it from the article;
   (2) no explicit number → the threat table (p. 27), wilderness column, by the
   article's wounds. Narrative-singular prose is NOT an explicit number:
-  crocodile, gorgon, leshy, minotaur, cyclops, anakim, djinn, baku, etc. use the
+  crocodile, gorgon, leshy, cyclops, anakim, baku, etc. use the
   threat table. Keep 1 only for explicit solitary clauses ("бродит один",
   "встречаются поодиночке", …); hydra 1, ghoul 1 outside lair / 20–120 in lair,
   nereid 1, spring nymphs d3, cargo mule threat. Conditional outcomes (trau
-  1/2/3, dwarf scout/escort, svartalf ambush 4 per traveller) stay referee
+  1/2/3, svartalf ambush 4 per traveller) stay referee
   choice/input. Human parties are unchanged (choice by situation / retinue
   scale). The separate "2d6 sum → threat" table on p. 27 is a **dungeon**
   template, not wilderness.
@@ -88,6 +88,11 @@ separate from rendering so they can be tested with forced dice.
   1–20 = d20, 1–10 = d10, 1–6 = d6, 1–4 = d4; d3 = ceil(d6/2) everywhere
   (`d3_2()`), including the thing-table row and dragon-hoard gems. Show the
   faces (`rollDiceExpr2` / `fmtRoll2`).
+- Dwarves, trolls, faeries and elves use their own 2d6 party tables. An explicit
+  oryx or wingless lindwurm result fixes that form; swamp 6 is always goblins.
+- Imported AiF bestiary prices use the silver standard: AiF gold amounts are
+  expressed in silver, AiF silver amounts in bronze. Creature hoards and their
+  ledger entries use the same units. Keep the book’s Appendix IV cache as written.
 - Dragons: one age roll (2d6) drives wounds, attacks, cone and hoard multiplier
   (×1/×3/×6). Sko'la has fixed stats and a fixed hoard; Gorynych's head count is
   a referee input; lun/lindwurm follow their article clauses. Never roll a
