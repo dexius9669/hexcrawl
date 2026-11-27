@@ -2117,8 +2117,12 @@ function genDragon2(species, variant) {
     const headRoll = roll(6), scalesRoll = roll(6);
     const wingsRoll = variant === 'бескрылый' ? null : roll(6);
     const featureRoll = roll(6);
+    // Результаты 2 и 3 задают разные варианты передних лап.
+    const incompatibleFeature = { 2: 3, 3: 2 }[featureRoll];
     let secondFeatureRoll = roll(6);
-    while (secondFeatureRoll === featureRoll) secondFeatureRoll = roll(6);
+    while (secondFeatureRoll === featureRoll || secondFeatureRoll === incompatibleFeature) {
+        secondFeatureRoll = roll(6);
+    }
     const giftRoll = roll(6), sexRoll = roll(6);
     const temperRolls = [];
     while (temperRolls.length < 3) {
